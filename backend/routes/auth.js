@@ -3,20 +3,9 @@ const router = express.Router();
 const db = require("../db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const nodemailer = require("nodemailer");
 
 // OTP STORE
 let otpStore = {};
-
-// EMAIL CONFIG
-const transporter = nodemailer.createTransport({
-  host: "sandbox.smtp.mailtrap.io",
-  port: 2525,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
 
 // PASSWORD VALIDATION
 const strongPassword =
@@ -81,26 +70,17 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// ================= SEND OTP =================
-router.post("/send-otp", async (req, res) => {
+// ================= SEND OTP (DEMO MODE) =================
+router.post("/send-otp", (req, res) => {
   const { username } = req.body;
 
   const otp = Math.floor(1000 + Math.random() * 9000);
   otpStore[username] = otp;
 
-  try {
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: username,
-      subject: "OTP Verification",
-      text: `Your OTP is ${otp}`
-    });
-
-    res.send("OTP sent 📧");
-  } catch (err) {
-    console.log(err.message);
-    res.send("Email failed ❌");
-  }
+  res.json({
+    message: "OTP sent (demo mode)",
+    demoOtp: otp
+  });
 });
 
 // ================= VERIFY OTP =================
