@@ -2,12 +2,15 @@ const { Client } = require("pg");
 require("dotenv").config();
 
 const db = new Client({
-  connectionString: process.env.DATABASE_URL,
+  host: "db.eaygeioafynoluykukbm.supabase.co",
+  port: 5432,
+  user: "postgres",
+  password: "099009@Raja",   // 🔥 your original password (NOT encoded)
+  database: "postgres",
   ssl: {
     require: true,
     rejectUnauthorized: false
-  },
-  family: 4   // 🔥 FORCE IPv4 (THIS FIXES YOUR ERROR)
+  }
 });
 
 db.connect()
