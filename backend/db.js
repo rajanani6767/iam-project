@@ -2,7 +2,7 @@ const { Client } = require("pg");
 require("dotenv").config();
 
 const db = new Client({
-  connectionString: process.env.DATABASE_URL, // ✅ USE ENV (POOLER)
+  connectionString: process.env.DATABASE_URL,
   ssl: {
     require: true,
     rejectUnauthorized: false
