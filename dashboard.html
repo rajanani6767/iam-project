@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dashboard</title>
+</head>
+<body>
+
+<h2>Welcome 🎉</h2>
+<button onclick="logout()">Logout</button>
+
+<script>
+const token = localStorage.getItem("token");
+
+if (!token) {
+  alert("Login first ❌");
+  window.location.href = "index.html";
+}
+
+function logout() {
+  localStorage.removeItem("token");
+  alert("Logged out");
+  window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>
