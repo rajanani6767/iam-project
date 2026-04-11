@@ -14,9 +14,6 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  },
-  tls: {
-    rejectUnauthorized: false   // 🔥 FIX SSL ERROR
   }
 });
 
@@ -29,9 +26,7 @@ router.post("/register", async (req, res) => {
   const { username, password } = req.body;
 
   if (!strongPassword.test(password)) {
-    return res.send(
-      "Password must be 8+ chars with uppercase, lowercase, number & special char ❌"
-    );
+    return res.send("Weak Password ❌");
   }
 
   try {
@@ -100,10 +95,9 @@ router.post("/send-otp", async (req, res) => {
       text: `Your OTP is ${otp}`
     });
 
-    res.send("OTP sent to email 📧");
-
+    res.send("OTP sent 📧");
   } catch (err) {
-    console.log("EMAIL ERROR 👉", err.message); // 🔥 DEBUG LINE
+    console.log(err.message);
     res.send("Email failed ❌");
   }
 });

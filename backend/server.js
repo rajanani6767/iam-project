@@ -1,20 +1,28 @@
 const express = require("express");
 const cors = require("cors");
-const app = express();
 require("dotenv").config();
 
-app.use(cors());
+const app = express();
+
+// ✅ CORS FIX (for GitHub Pages)
+app.use(cors({
+  origin: "*"
+}));
+
 app.use(express.json());
 
-// ✅ FIXED ROUTES
+// Routes
 const authRoutes = require("./routes/auth");
 app.use("/auth", authRoutes);
 
-// TEST ROUTE
+// Test route
 app.get("/", (req, res) => {
   res.send("Server Running 🚀");
 });
 
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+// ✅ Render PORT FIX
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

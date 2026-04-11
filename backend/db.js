@@ -1,21 +1,11 @@
 const { Client } = require("pg");
 require("dotenv").config();
 
-
 const db = new Client({
-
-  host: "db.eaygeioafynoluykukbm.supabase.co",
-
-  user: "postgres",
-
-  password: "099009@Raja",
-
-  database: "postgres",
-
-  port: 5432,
-
-  ssl: { rejectUnauthorized: false }
-
+  connectionString: process.env.DATABASE_URL, // ✅ Render style
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 db.connect()

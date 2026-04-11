@@ -55,16 +55,15 @@ button {
 <button onclick="resetPassword()">Reset</button>
 
 <script>
+// 🔥 CHANGE THIS ONLY
+const BASE_URL = "https://your-app.onrender.com";
+
+// ================= REGISTER =================
 async function register() {
   const username = regUser.value;
   const password = regPass.value;
 
-  if (password.length < 8) {
-    alert("Password must be at least 8 chars ❌");
-    return;
-  }
-
-  const res = await fetch("http://localhost:5000/auth/register", {
+  const res = await fetch(`${BASE_URL}/auth/register`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ username, password })
@@ -73,11 +72,12 @@ async function register() {
   alert(await res.text());
 }
 
+// ================= LOGIN =================
 async function login() {
   const username = logUser.value;
   const password = logPass.value;
 
-  const res = await fetch("http://localhost:5000/auth/login", {
+  const res = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ username, password })
@@ -94,10 +94,11 @@ async function login() {
   }
 }
 
+// ================= SEND OTP =================
 async function sendOtp() {
   const username = otpUser.value;
 
-  const res = await fetch("http://localhost:5000/auth/send-otp", {
+  const res = await fetch(`${BASE_URL}/auth/send-otp`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ username })
@@ -106,11 +107,12 @@ async function sendOtp() {
   alert(await res.text());
 }
 
+// ================= VERIFY OTP =================
 async function verifyOtp() {
   const username = otpUser.value;
   const otp = otpValue.value;
 
-  const res = await fetch("http://localhost:5000/auth/verify-otp", {
+  const res = await fetch(`${BASE_URL}/auth/verify-otp`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ username, otp })
@@ -119,12 +121,13 @@ async function verifyOtp() {
   alert(await res.text());
 }
 
+// ================= RESET PASSWORD =================
 async function resetPassword() {
   const username = fpUser.value;
   const otp = fpOtp.value;
   const newPassword = newPass.value;
 
-  const res = await fetch("http://localhost:5000/auth/reset-password", {
+  const res = await fetch(`${BASE_URL}/auth/reset-password`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ username, otp, newPassword })
