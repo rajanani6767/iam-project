@@ -4,6 +4,17 @@ const db = require("../db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const axios = require("axios");
+const { GoogleAuth } = require("google-auth-library");
+
+// ================= GOOGLE AUTH =================
+const auth = new GoogleAuth({
+  credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS),
+  scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+});
+
+// 🔥 IMPORTANT: replace with your project ID
+const projectId = "ai-project-493616";
+const location = "us-central1";
 
 // OTP STORE
 let otpStore = {};
@@ -71,7 +82,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// ================= OTP =================
+// ================= SEND OTP =================
 router.post("/send-otp", (req, res) => {
   const { username } = req.body;
 
@@ -84,6 +95,7 @@ router.post("/send-otp", (req, res) => {
   });
 });
 
+// ================= VERIFY OTP =================
 router.post("/verify-otp", (req, res) => {
   const { username, otp } = req.body;
 
@@ -94,6 +106,7 @@ router.post("/verify-otp", (req, res) => {
   }
 });
 
+// ================= RESET PASSWORD =================
 router.post("/reset-password", async (req, res) => {
   const { username, otp, newPassword } = req.body;
 
@@ -120,33 +133,43 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
-// ================= AI ASSISTANT (WORKING GEMINI) =================
+// ================= AI ASSISTANT (VERTEX GEMINI) =================
 router.post("/ai-help", async (req, res) => {
   const message = req.body.message || "Hello";
 
   try {
+    const client = await auth.getClient();
+    const accessToken = await client.getAccessToken();
+
+    const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-pro:predict`;
+
     const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      url,
       {
-        contents: [
+        instances: [
           {
-            parts: [{ text: message }]
-          }
-        ]
+            content: message,
+          },
+        ],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken.token}`,
+          "Content-Type": "application/json",
+        },
       }
     );
 
     const reply =
-      response.data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "No response";
+      response.data.predictions?.[0]?.content || "No response";
 
     res.json({ reply });
 
   } catch (err) {
-    console.log("GEMINI ERROR 👉", err.response?.data || err.message);
+    console.log("VERTEX ERROR 👉", err.response?.data || err.message);
 
     res.json({
-      reply: "AI temporarily unavailable ❌"
+      reply: "AI failed ❌",
     });
   }
 });
