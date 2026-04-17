@@ -71,7 +71,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// ================= SEND OTP =================
+// ================= OTP =================
 router.post("/send-otp", (req, res) => {
   const { username } = req.body;
 
@@ -84,7 +84,6 @@ router.post("/send-otp", (req, res) => {
   });
 });
 
-// ================= VERIFY OTP =================
 router.post("/verify-otp", (req, res) => {
   const { username, otp } = req.body;
 
@@ -95,7 +94,6 @@ router.post("/verify-otp", (req, res) => {
   }
 });
 
-// ================= RESET PASSWORD =================
 router.post("/reset-password", async (req, res) => {
   const { username, otp, newPassword } = req.body;
 
@@ -122,13 +120,13 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
-// ================= AI ASSISTANT (GEMINI FINAL) =================
+// ================= AI ASSISTANT (WORKING GEMINI) =================
 router.post("/ai-help", async (req, res) => {
   const message = req.body.message || "Hello";
 
   try {
     const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         contents: [
           {
