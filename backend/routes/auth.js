@@ -122,11 +122,12 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
-// ================= AI ASSISTANT (HUGGING FACE) =================
+// ================= AI ASSISTANT (FINAL) =================
 router.post("/ai-help", async (req, res) => {
-  const message = req.body.message || "Hello";
+  const message = req.body.message?.toLowerCase() || "";
 
   try {
+    // 🔹 Try HuggingFace first
     const response = await axios.post(
       "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill",
       { inputs: message },
@@ -134,18 +135,55 @@ router.post("/ai-help", async (req, res) => {
         headers: {
           Authorization: `Bearer ${process.env.HF_API_KEY}`,
         },
+        timeout: 5000 // avoid long wait
       }
     );
 
-    res.json({
-      reply: response.data.generated_text || "No response"
-    });
+    let reply = "No response";
+
+    if (Array.isArray(response.data)) {
+      reply = response.data[0]?.generated_text || reply;
+    } else if (response.data.generated_text) {
+      reply = response.data.generated_text;
+    }
+
+    if (!reply || reply === "No response") {
+      throw new Error("Empty HF response");
+    }
+
+    return res.json({ reply });
 
   } catch (err) {
-    console.log("HF ERROR 👉", err.response?.data || err.message);
+    console.log("HF ERROR 👉", err.message);
 
-    res.json({
-      reply: "AI unavailable ❌"
+    // 🔥 FALLBACK AI (always works)
+    if (message.includes("password")) {
+      return res.json({
+        reply: "Password must include uppercase, lowercase, number and special character."
+      });
+    }
+
+    if (message.includes("otp")) {
+      return res.json({
+        reply: "OTP is a one-time password used to verify your identity."
+      });
+    }
+
+    if (message.includes("login")) {
+      return res.json({
+        reply: "Check your username and password. Make sure they are correct."
+      });
+    }
+
+    if (message.includes("jwt")) {
+      return res.json({
+        reply: "JWT is a token used for secure authentication between client and server."
+      });
+    }
+
+    // Default fallback
+    return res.json({
+      reply: "AI is currently busy. Please try again later."
     });
   }
 });
