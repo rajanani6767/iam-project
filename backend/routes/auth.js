@@ -3,12 +3,7 @@ const router = express.Router();
 const db = require("../db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const OpenAI = require("openai");
-
-// ================= OPENAI =================
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const axios = require("axios");
 
 // OTP STORE
 let otpStore = {};
@@ -127,45 +122,30 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
-// ================= AI ASSISTANT =================
+// ================= AI ASSISTANT (HUGGING FACE) =================
 router.post("/ai-help", async (req, res) => {
-  const { message } = req.body;
+  const message = req.body.message || "Hello";
 
   try {
-    const aiResponse = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `
-You are an authentication assistant for a web app.
-
-Help users with:
-- login issues
-- password rules
-- OTP verification
-- JWT explanation
-
-Keep answers short and simple.
-          `,
+    const response = await axios.post(
+      "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill",
+      { inputs: message },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.HF_API_KEY}`,
         },
-        {
-          role: "user",
-          content: message,
-        },
-      ],
-    });
+      }
+    );
 
     res.json({
-      reply: aiResponse.choices[0].message.content,
+      reply: response.data.generated_text || "No response"
     });
 
   } catch (err) {
-    console.log("AI ERROR 👉", err);
+    console.log("HF ERROR 👉", err.response?.data || err.message);
 
-    // ✅ FIXED (ALWAYS JSON)
-    res.status(500).json({
-      reply: "AI failed ❌",
+    res.json({
+      reply: "AI unavailable ❌"
     });
   }
 });
