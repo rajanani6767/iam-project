@@ -54,146 +54,108 @@ button {
 <input id="newPass" type="password" placeholder="New Password"><br>
 <button onclick="resetPassword()">Reset</button>
 
+<hr>
+
+<h2>AI Assistant 🤖</h2>
+<input id="aiInput" placeholder="Ask something..."><br>
+<button onclick="askAI()">Ask</button>
+
+<p id="aiResponse"></p>
+
 <script>
 
-// 🔥 PUT YOUR RENDER URL HERE
 const BASE_URL = "https://iam-project.onrender.com";
 
-// ================= REGISTER =================
+// REGISTER
 async function register() {
-  console.log("Register clicked");
-
   const username = regUser.value;
   const password = regPass.value;
 
-  try {
-    const res = await fetch(`${BASE_URL}/auth/register`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ username, password })
-    });
+  const res = await fetch(`${BASE_URL}/auth/register`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ username, password })
+  });
 
-    console.log("Register status:", res.status);
-
-    const data = await res.text();
-    console.log("Register response:", data);
-
-    alert(data);
-
-  } catch (err) {
-    console.log("REGISTER ERROR 👉", err);
-    alert("Register failed ❌");
-  }
+  alert(await res.text());
 }
 
-// ================= LOGIN =================
+// LOGIN
 async function login() {
-  console.log("Login clicked");
-
   const username = logUser.value;
   const password = logPass.value;
 
-  try {
-    const res = await fetch(`${BASE_URL}/auth/login`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ username, password })
-    });
+  const res = await fetch(`${BASE_URL}/auth/login`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ username, password })
+  });
 
-    console.log("Login status:", res.status);
+  const data = await res.json();
 
-    const data = await res.json();
-    console.log("Login response:", data);
-
-    if (data.token) {
-      localStorage.setItem("token", data.token);
-      alert("Login Success ✅");
-      window.location.href = "dashboard.html";
-    } else {
-      alert("Login failed ❌");
-    }
-
-  } catch (err) {
-    console.log("LOGIN ERROR 👉", err);
-    alert("Something went wrong ❌");
+  if (data.token) {
+    localStorage.setItem("token", data.token);
+    alert("Login Success ✅");
+    window.location.href = "dashboard.html";
+  } else {
+    alert("Login failed ❌");
   }
 }
 
-// ================= SEND OTP =================
+// SEND OTP
 async function sendOtp() {
-  console.log("Send OTP clicked");
-
   const username = otpUser.value;
 
-  try {
-    const res = await fetch(`${BASE_URL}/auth/send-otp`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ username })
-    });
+  const res = await fetch(`${BASE_URL}/auth/send-otp`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ username })
+  });
 
-    console.log("OTP status:", res.status);
-
-    const data = await res.text();
-    console.log("OTP response:", data);
-
-    alert(data);
-
-  } catch (err) {
-    console.log("OTP ERROR 👉", err);
-    alert("OTP failed ❌");
-  }
+  alert(await res.text());
 }
 
-// ================= VERIFY OTP =================
+// VERIFY OTP
 async function verifyOtp() {
-  console.log("Verify OTP clicked");
-
   const username = otpUser.value;
   const otp = otpValue.value;
 
-  try {
-    const res = await fetch(`${BASE_URL}/auth/verify-otp`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ username, otp })
-    });
+  const res = await fetch(`${BASE_URL}/auth/verify-otp`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ username, otp })
+  });
 
-    const data = await res.text();
-    console.log("Verify response:", data);
-
-    alert(data);
-
-  } catch (err) {
-    console.log("VERIFY ERROR 👉", err);
-    alert("Verification failed ❌");
-  }
+  alert(await res.text());
 }
 
-// ================= RESET PASSWORD =================
+// RESET PASSWORD
 async function resetPassword() {
-  console.log("Reset clicked");
-
   const username = fpUser.value;
   const otp = fpOtp.value;
   const newPassword = newPass.value;
 
-  try {
-    const res = await fetch(`${BASE_URL}/auth/reset-password`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ username, otp, newPassword })
-    });
+  const res = await fetch(`${BASE_URL}/auth/reset-password`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ username, otp, newPassword })
+  });
 
-    const data = await res.text();
-    console.log("Reset response:", data);
+  alert(await res.text());
+}
 
-    alert(data);
+// AI
+async function askAI() {
+  const message = aiInput.value;
 
-  } catch (err) {
-    console.log("RESET ERROR 👉", err);
-    alert("Reset failed ❌");
-  }
+  const res = await fetch(`${BASE_URL}/auth/ai-help`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ message })
+  });
+
+  const data = await res.json();
+  aiResponse.innerText = data.reply;
 }
 
 </script>

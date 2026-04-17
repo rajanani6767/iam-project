@@ -3,6 +3,12 @@ const router = express.Router();
 const db = require("../db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const OpenAI = require("openai");
+
+// ================= OPENAI =================
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 // OTP STORE
 let otpStore = {};
@@ -70,7 +76,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// ================= SEND OTP (DEMO MODE) =================
+// ================= SEND OTP =================
 router.post("/send-otp", (req, res) => {
   const { username } = req.body;
 
@@ -118,6 +124,45 @@ router.post("/reset-password", async (req, res) => {
 
   } catch (err) {
     res.send(err.message);
+  }
+});
+
+// ================= AI ASSISTANT =================
+router.post("/ai-help", async (req, res) => {
+  const { message } = req.body;
+
+  try {
+    const aiResponse = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `
+You are an authentication assistant for a web app.
+
+Help users with:
+- login issues
+- password rules
+- OTP verification
+- JWT explanation
+
+Keep answers short and simple.
+          `,
+        },
+        {
+          role: "user",
+          content: message,
+        },
+      ],
+    });
+
+    res.json({
+      reply: aiResponse.choices[0].message.content,
+    });
+
+  } catch (err) {
+    console.log("AI ERROR 👉", err);
+    res.send("AI failed ❌");
   }
 });
 
