@@ -22,7 +22,7 @@ router.post("/register", async (req, res) => {
   const { username, password } = req.body;
 
   if (!strongPassword.test(password)) {
-    return res.send("Weak Password ❌");
+    return res.json({ message: "Weak Password ❌" });
   }
 
   try {
@@ -33,9 +33,9 @@ router.post("/register", async (req, res) => {
       [username, hashedPassword]
     );
 
-    res.send("User Registered ✅");
+    res.json({ message: "User Registered ✅" });
   } catch (err) {
-    res.send(err.message);
+    res.json({ message: err.message });
   }
 });
 
@@ -50,14 +50,14 @@ router.post("/login", async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.send("User Not Found ❌");
+      return res.json({ message: "User Not Found ❌" });
     }
 
     const user = result.rows[0];
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.send("Invalid Password ❌");
+      return res.json({ message: "Invalid Password ❌" });
     }
 
     const token = jwt.sign(
@@ -68,11 +68,11 @@ router.post("/login", async (req, res) => {
 
     res.json({
       message: "Login Success ✅",
-      token
+      token,
     });
 
   } catch (err) {
-    res.send(err.message);
+    res.json({ message: err.message });
   }
 });
 
@@ -85,7 +85,7 @@ router.post("/send-otp", (req, res) => {
 
   res.json({
     message: "OTP sent (demo mode)",
-    demoOtp: otp
+    demoOtp: otp,
   });
 });
 
@@ -94,9 +94,9 @@ router.post("/verify-otp", (req, res) => {
   const { username, otp } = req.body;
 
   if (otpStore[username] == otp) {
-    res.send("OTP Verified ✅");
+    res.json({ message: "OTP Verified ✅" });
   } else {
-    res.send("Invalid OTP ❌");
+    res.json({ message: "Invalid OTP ❌" });
   }
 });
 
@@ -105,11 +105,11 @@ router.post("/reset-password", async (req, res) => {
   const { username, otp, newPassword } = req.body;
 
   if (otpStore[username] != otp) {
-    return res.send("Invalid OTP ❌");
+    return res.json({ message: "Invalid OTP ❌" });
   }
 
   if (!strongPassword.test(newPassword)) {
-    return res.send("Weak Password ❌");
+    return res.json({ message: "Weak Password ❌" });
   }
 
   try {
@@ -120,10 +120,10 @@ router.post("/reset-password", async (req, res) => {
       [hashedPassword, username]
     );
 
-    res.send("Password Reset Successful ✅");
+    res.json({ message: "Password Reset Successful ✅" });
 
   } catch (err) {
-    res.send(err.message);
+    res.json({ message: err.message });
   }
 });
 
@@ -162,7 +162,11 @@ Keep answers short and simple.
 
   } catch (err) {
     console.log("AI ERROR 👉", err);
-    res.send("AI failed ❌");
+
+    // ✅ FIXED (ALWAYS JSON)
+    res.status(500).json({
+      reply: "AI failed ❌",
+    });
   }
 });
 
