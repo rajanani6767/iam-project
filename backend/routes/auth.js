@@ -71,7 +71,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// ================= SEND OTP =================
+// ================= OTP =================
 router.post("/send-otp", (req, res) => {
   const { username } = req.body;
 
@@ -84,7 +84,6 @@ router.post("/send-otp", (req, res) => {
   });
 });
 
-// ================= VERIFY OTP =================
 router.post("/verify-otp", (req, res) => {
   const { username, otp } = req.body;
 
@@ -95,7 +94,6 @@ router.post("/verify-otp", (req, res) => {
   }
 });
 
-// ================= RESET PASSWORD =================
 router.post("/reset-password", async (req, res) => {
   const { username, otp, newPassword } = req.body;
 
@@ -122,68 +120,33 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
-// ================= AI ASSISTANT (FINAL) =================
+// ================= AI ASSISTANT (GEMINI) =================
 router.post("/ai-help", async (req, res) => {
-  const message = req.body.message?.toLowerCase() || "";
+  const message = req.body.message || "Hello";
 
   try {
-    // 🔹 Try HuggingFace first
     const response = await axios.post(
-      "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill",
-      { inputs: message },
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
-        headers: {
-          Authorization: `Bearer ${process.env.HF_API_KEY}`,
-        },
-        timeout: 5000 // avoid long wait
+        contents: [
+          {
+            parts: [{ text: message }]
+          }
+        ]
       }
     );
 
-    let reply = "No response";
+    const reply =
+      response.data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "No response";
 
-    if (Array.isArray(response.data)) {
-      reply = response.data[0]?.generated_text || reply;
-    } else if (response.data.generated_text) {
-      reply = response.data.generated_text;
-    }
-
-    if (!reply || reply === "No response") {
-      throw new Error("Empty HF response");
-    }
-
-    return res.json({ reply });
+    res.json({ reply });
 
   } catch (err) {
-    console.log("HF ERROR 👉", err.message);
+    console.log("GEMINI ERROR 👉", err.response?.data || err.message);
 
-    // 🔥 FALLBACK AI (always works)
-    if (message.includes("password")) {
-      return res.json({
-        reply: "Password must include uppercase, lowercase, number and special character."
-      });
-    }
-
-    if (message.includes("otp")) {
-      return res.json({
-        reply: "OTP is a one-time password used to verify your identity."
-      });
-    }
-
-    if (message.includes("login")) {
-      return res.json({
-        reply: "Check your username and password. Make sure they are correct."
-      });
-    }
-
-    if (message.includes("jwt")) {
-      return res.json({
-        reply: "JWT is a token used for secure authentication between client and server."
-      });
-    }
-
-    // Default fallback
-    return res.json({
-      reply: "AI is currently busy. Please try again later."
+    res.json({
+      reply: "AI temporarily unavailable ❌"
     });
   }
 });
