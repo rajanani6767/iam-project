@@ -1,30 +1,106 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Auth App</title>
+<title>Cyber Protector 🔐</title>
 
 <style>
 body {
-  font-family: Arial;
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: black;
+  color: #00ffcc;
   text-align: center;
-  background: #f5f5f5;
+  overflow-x: hidden;
 }
+
+/* MATRIX CANVAS */
+#matrix {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
+
+/* Container */
+.container {
+  margin: 40px auto;
+  padding: 30px;
+  width: 350px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 15px;
+  box-shadow: 0 0 25px #00ffcc;
+}
+
+/* Headings */
+h1 {
+  margin-top: 20px;
+  text-shadow: 0 0 15px #00ffcc;
+}
+
+h2 {
+  text-shadow: 0 0 10px #00ffcc;
+}
+
+/* Inputs */
 input {
   padding: 10px;
-  margin: 5px;
-  width: 220px;
+  margin: 8px;
+  width: 230px;
+  border: 2px solid #00ffcc;
+  border-radius: 5px;
+  background: black;
+  color: #00ffcc;
 }
+
+input::placeholder {
+  color: #66fff2;
+}
+
+/* Buttons */
 button {
-  padding: 10px;
-  background: #4CAF50;
-  color: white;
-  border: none;
+  padding: 10px 20px;
+  background: transparent;
+  color: #00ffcc;
+  border: 2px solid #00ffcc;
   cursor: pointer;
+  margin: 8px;
+  border-radius: 5px;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: #00ffcc;
+  color: black;
+  box-shadow: 0 0 15px #00ffcc;
+}
+
+/* Password Output */
+#generatedPw {
+  font-size: 20px;
+  font-weight: bold;
+  margin-top: 10px;
+  text-shadow: 0 0 10px #00ffcc;
+}
+
+/* Divider */
+hr {
+  border: 0;
+  height: 1px;
+  background: #00ffcc;
+  opacity: 0.3;
+  margin: 20px 0;
 }
 </style>
 
 </head>
+
 <body>
+
+<canvas id="matrix"></canvas>
+
+<h1>🛡 Cyber Protector System 🔐</h1>
+
+<div class="container">
 
 <h2>Register</h2>
 <input id="regUser" placeholder="Email"><br>
@@ -57,15 +133,57 @@ button {
 <hr>
 
 <h2>Password Generator 🔐</h2>
-<input id="pwLength" type="number" value="12"><br>
+
+<input id="pwLength" type="number" min="8" max="32" value="12" placeholder="Length"><br>
+
 <button onclick="generatePassword()">Generate</button>
+
 <p id="generatedPw"></p>
+
 <button onclick="copyPassword()">Copy</button>
 
+</div>
+
 <script>
+
+// ================= MATRIX EFFECT =================
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+
+canvas.height = window.innerHeight;
+canvas.width = window.innerWidth;
+
+const letters = "01";
+const fontSize = 14;
+const columns = canvas.width / fontSize;
+
+const drops = [];
+for (let x = 0; x < columns; x++) drops[x] = 1;
+
+function draw() {
+  ctx.fillStyle = "rgba(0,0,0,0.05)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#00ffcc";
+  ctx.font = fontSize + "px monospace";
+
+  for (let i = 0; i < drops.length; i++) {
+    const text = letters[Math.floor(Math.random() * letters.length)];
+    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975)
+      drops[i] = 0;
+
+    drops[i]++;
+  }
+}
+
+setInterval(draw, 33);
+
+// ================= API BASE =================
 const BASE_URL = "https://iam-project.onrender.com";
 
-// REGISTER
+// ================= REGISTER =================
 async function register() {
   const res = await fetch(`${BASE_URL}/auth/register`, {
     method: "POST",
@@ -78,7 +196,7 @@ async function register() {
   alert(await res.text());
 }
 
-// LOGIN
+// ================= LOGIN =================
 async function login() {
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
@@ -100,7 +218,7 @@ async function login() {
   }
 }
 
-// OTP
+// ================= OTP =================
 async function sendOtp() {
   const res = await fetch(`${BASE_URL}/auth/send-otp`, {
     method: "POST",
@@ -122,7 +240,7 @@ async function verifyOtp() {
   alert(await res.text());
 }
 
-// RESET
+// ================= RESET =================
 async function resetPassword() {
   const res = await fetch(`${BASE_URL}/auth/reset-password`, {
     method: "POST",
@@ -136,9 +254,14 @@ async function resetPassword() {
   alert(await res.text());
 }
 
-// PASSWORD GENERATOR
+// ================= PASSWORD GENERATOR =================
 async function generatePassword() {
-  const length = pwLength.value;
+  let length = parseInt(pwLength.value);
+
+  if (isNaN(length) || length < 8 || length > 32) {
+    alert("Enter valid length (8–32) ❌");
+    return;
+  }
 
   const res = await fetch(`${BASE_URL}/auth/generate-password?length=${length}`);
   const data = await res.json();
@@ -146,10 +269,19 @@ async function generatePassword() {
   generatedPw.innerText = data.password;
 }
 
+// ================= COPY =================
 function copyPassword() {
-  navigator.clipboard.writeText(generatedPw.innerText);
+  const pw = generatedPw.innerText;
+
+  if (!pw) {
+    alert("Generate password first ❌");
+    return;
+  }
+
+  navigator.clipboard.writeText(pw);
   alert("Copied ✅");
 }
+
 </script>
 
 </body>
