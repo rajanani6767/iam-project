@@ -56,39 +56,37 @@ button {
 
 <hr>
 
-<h2>AI Assistant 🤖</h2>
-<input id="aiInput" placeholder="Ask something..."><br>
-<button onclick="askAI()">Ask</button>
-
-<p id="aiResponse"></p>
+<h2>Password Generator 🔐</h2>
+<input id="pwLength" type="number" value="12"><br>
+<button onclick="generatePassword()">Generate</button>
+<p id="generatedPw"></p>
+<button onclick="copyPassword()">Copy</button>
 
 <script>
-
 const BASE_URL = "https://iam-project.onrender.com";
 
 // REGISTER
 async function register() {
-  const username = regUser.value;
-  const password = regPass.value;
-
   const res = await fetch(`${BASE_URL}/auth/register`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ username, password })
+    body: JSON.stringify({
+      username: regUser.value,
+      password: regPass.value
+    })
   });
-
   alert(await res.text());
 }
 
 // LOGIN
 async function login() {
-  const username = logUser.value;
-  const password = logPass.value;
-
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ username, password })
+    body: JSON.stringify({
+      username: logUser.value,
+      password: logPass.value
+    })
   });
 
   const data = await res.json();
@@ -102,62 +100,56 @@ async function login() {
   }
 }
 
-// SEND OTP
+// OTP
 async function sendOtp() {
-  const username = otpUser.value;
-
   const res = await fetch(`${BASE_URL}/auth/send-otp`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ username })
+    body: JSON.stringify({ username: otpUser.value })
   });
-
   alert(await res.text());
 }
 
-// VERIFY OTP
 async function verifyOtp() {
-  const username = otpUser.value;
-  const otp = otpValue.value;
-
   const res = await fetch(`${BASE_URL}/auth/verify-otp`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ username, otp })
+    body: JSON.stringify({
+      username: otpUser.value,
+      otp: otpValue.value
+    })
   });
-
   alert(await res.text());
 }
 
-// RESET PASSWORD
+// RESET
 async function resetPassword() {
-  const username = fpUser.value;
-  const otp = fpOtp.value;
-  const newPassword = newPass.value;
-
   const res = await fetch(`${BASE_URL}/auth/reset-password`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ username, otp, newPassword })
+    body: JSON.stringify({
+      username: fpUser.value,
+      otp: fpOtp.value,
+      newPassword: newPass.value
+    })
   });
-
   alert(await res.text());
 }
 
-// AI
-async function askAI() {
-  const message = aiInput.value;
+// PASSWORD GENERATOR
+async function generatePassword() {
+  const length = pwLength.value;
 
-  const res = await fetch(`${BASE_URL}/auth/ai-help`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ message })
-  });
-
+  const res = await fetch(`${BASE_URL}/auth/generate-password?length=${length}`);
   const data = await res.json();
-  aiResponse.innerText = data.reply;
+
+  generatedPw.innerText = data.password;
 }
 
+function copyPassword() {
+  navigator.clipboard.writeText(generatedPw.innerText);
+  alert("Copied ✅");
+}
 </script>
 
 </body>

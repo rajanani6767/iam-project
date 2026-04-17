@@ -1,14 +1,12 @@
 const { Client } = require("pg");
-require("dotenv").config(); // safe to keep
-
-console.log("ENV DB 👉", process.env.DATABASE_URL); // debug
+require("dotenv").config();
 
 const db = new Client({
   connectionString: process.env.DATABASE_URL,
   ssl: {
     require: true,
-    rejectUnauthorized: false
-  }
+    rejectUnauthorized: false,
+  },
 });
 
 db.connect()

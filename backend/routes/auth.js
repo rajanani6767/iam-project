@@ -3,18 +3,6 @@ const router = express.Router();
 const db = require("../db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const axios = require("axios");
-const { GoogleAuth } = require("google-auth-library");
-
-// ================= GOOGLE AUTH =================
-const auth = new GoogleAuth({
-  credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS),
-  scopes: ["https://www.googleapis.com/auth/cloud-platform"],
-});
-
-// 🔥 IMPORTANT: replace with your project ID
-const projectId = "ai-project-493616";
-const location = "us-central1";
 
 // OTP STORE
 let otpStore = {};
@@ -133,45 +121,36 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
-// ================= AI ASSISTANT (VERTEX GEMINI) =================
-router.post("/ai-help", async (req, res) => {
-  const message = req.body.message || "Hello";
+// ================= PASSWORD GENERATOR =================
+router.get("/generate-password", (req, res) => {
+  const length = parseInt(req.query.length) || 12;
 
-  try {
-    const client = await auth.getClient();
-    const accessToken = await client.getAccessToken();
+  const lower = "abcdefghijklmnopqrstuvwxyz";
+  const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const numbers = "0123456789";
+  const symbols = "@$!%*?&";
 
-    const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-pro:predict`;
+  const all = lower + upper + numbers + symbols;
 
-    const response = await axios.post(
-      url,
-      {
-        instances: [
-          {
-            content: message,
-          },
-        ],
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken.token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+  let password = "";
 
-    const reply =
-      response.data.predictions?.[0]?.content || "No response";
+  // ensure strong password
+  password += lower[Math.floor(Math.random() * lower.length)];
+  password += upper[Math.floor(Math.random() * upper.length)];
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  password += symbols[Math.floor(Math.random() * symbols.length)];
 
-    res.json({ reply });
-
-  } catch (err) {
-    console.log("VERTEX ERROR 👉", err.response?.data || err.message);
-
-    res.json({
-      reply: "AI failed ❌",
-    });
+  for (let i = 4; i < length; i++) {
+    password += all[Math.floor(Math.random() * all.length)];
   }
+
+  // shuffle
+  password = password
+    .split("")
+    .sort(() => Math.random() - 0.5)
+    .join("");
+
+  res.json({ password });
 });
 
 module.exports = router;
