@@ -10,10 +10,8 @@ body {
   background: black;
   color: #00ffcc;
   text-align: center;
-  overflow-x: hidden;
 }
 
-/* MATRIX CANVAS */
 #matrix {
   position: fixed;
   top: 0;
@@ -21,27 +19,15 @@ body {
   z-index: -1;
 }
 
-/* Container */
 .container {
   margin: 40px auto;
   padding: 30px;
   width: 350px;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   border-radius: 15px;
   box-shadow: 0 0 25px #00ffcc;
 }
 
-/* Headings */
-h1 {
-  margin-top: 20px;
-  text-shadow: 0 0 15px #00ffcc;
-}
-
-h2 {
-  text-shadow: 0 0 10px #00ffcc;
-}
-
-/* Inputs */
 input {
   padding: 10px;
   margin: 8px;
@@ -52,20 +38,13 @@ input {
   color: #00ffcc;
 }
 
-input::placeholder {
-  color: #66fff2;
-}
-
-/* Buttons */
 button {
   padding: 10px 20px;
+  margin: 8px;
+  border: 2px solid #00ffcc;
   background: transparent;
   color: #00ffcc;
-  border: 2px solid #00ffcc;
   cursor: pointer;
-  margin: 8px;
-  border-radius: 5px;
-  transition: 0.3s;
 }
 
 button:hover {
@@ -74,21 +53,14 @@ button:hover {
   box-shadow: 0 0 15px #00ffcc;
 }
 
-/* Password Output */
-#generatedPw {
-  font-size: 20px;
+#strengthText {
   font-weight: bold;
-  margin-top: 10px;
-  text-shadow: 0 0 10px #00ffcc;
+  margin-top: 5px;
 }
 
-/* Divider */
-hr {
-  border: 0;
-  height: 1px;
-  background: #00ffcc;
-  opacity: 0.3;
-  margin: 20px 0;
+#generatedPw {
+  font-size: 18px;
+  margin-top: 10px;
 }
 </style>
 
@@ -105,6 +77,10 @@ hr {
 <h2>Register</h2>
 <input id="regUser" placeholder="Email"><br>
 <input id="regPass" type="password" placeholder="Password"><br>
+
+<!-- ✅ STRENGTH METER -->
+<div id="strengthText"></div>
+
 <button onclick="register()">Register</button>
 
 <hr>
@@ -133,13 +109,10 @@ hr {
 <hr>
 
 <h2>Password Generator 🔐</h2>
-
-<input id="pwLength" type="number" min="8" max="32" value="12" placeholder="Length"><br>
-
+<input id="pwLength" type="number" min="8" max="32" value="12"><br>
 <button onclick="generatePassword()">Generate</button>
 
 <p id="generatedPw"></p>
-
 <button onclick="copyPassword()">Copy</button>
 
 </div>
@@ -180,8 +153,37 @@ function draw() {
 
 setInterval(draw, 33);
 
-// ================= API BASE =================
+// ================= BASE URL =================
 const BASE_URL = "https://iam-project.onrender.com";
+
+// ================= PASSWORD STRENGTH =================
+const regPass = document.getElementById("regPass");
+const strengthText = document.getElementById("strengthText");
+
+regPass.addEventListener("input", () => {
+  const val = regPass.value;
+
+  let strength = "Weak ❌";
+  let color = "red";
+
+  if (val.length >= 8 && /[A-Z]/.test(val) && /\d/.test(val)) {
+    strength = "Medium ⚠️";
+    color = "orange";
+  }
+
+  if (
+    val.length >= 8 &&
+    /[A-Z]/.test(val) &&
+    /\d/.test(val) &&
+    /[@$!%*?&]/.test(val)
+  ) {
+    strength = "Strong ✅";
+    color = "lime";
+  }
+
+  strengthText.innerText = "Strength: " + strength;
+  strengthText.style.color = color;
+});
 
 // ================= REGISTER =================
 async function register() {
@@ -211,7 +213,6 @@ async function login() {
 
   if (data.token) {
     localStorage.setItem("token", data.token);
-    alert("Login Success ✅");
     window.location.href = "dashboard.html";
   } else {
     alert("Login failed ❌");

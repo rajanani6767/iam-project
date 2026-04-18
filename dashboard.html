@@ -1,25 +1,30 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>Dashboard</title>
-</head>
 <body>
 
-<h2>Welcome 🎉</h2>
+<h2>Dashboard 🔐</h2>
+
+<button onclick="loadData()">Check Access</button>
 <button onclick="logout()">Logout</button>
 
 <script>
-const token = localStorage.getItem("token");
+const BASE_URL = "https://iam-project.onrender.com";
 
-// 🔐 Protect page
-if (!token) {
-  alert("Login first ❌");
-  window.location.href = "index.html";
+async function loadData() {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${BASE_URL}/auth/dashboard`, {
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  });
+
+  const data = await res.json();
+  alert(data.message);
 }
 
 function logout() {
   localStorage.removeItem("token");
-  alert("Logged out");
   window.location.href = "index.html";
 }
 </script>

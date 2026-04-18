@@ -3,11 +3,25 @@ dns.setDefaultResultOrder("ipv4first");
 
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 
 const app = express();
 
+// ✅ Security
+app.use(helmet());
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: "Too many requests 🚫",
+});
+app.use(limiter);
+
+// ✅ CORS
 app.use(cors({ origin: "*" }));
+
 app.use(express.json());
 
 // Routes
