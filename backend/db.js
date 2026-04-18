@@ -10,7 +10,7 @@ const db = new Client({
 });
 
 db.connect()
-  .then(() => console.log("Database Connected ✅"))
+  .then(() => console.log("DB Connected ✅"))
   .catch(err => console.log("DB ERROR 👉", err));
 
 module.exports = db;

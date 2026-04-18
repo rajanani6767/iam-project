@@ -1,5 +1,27 @@
 <!DOCTYPE html>
 <html>
+<head>
+<title>Dashboard 🔐</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #0b0c10;
+  color: #66fcf1;
+  text-align: center;
+  padding-top: 100px;
+}
+
+button {
+  padding: 10px 20px;
+  margin: 10px;
+  background: #45a29e;
+  border: none;
+  cursor: pointer;
+}
+</style>
+
+</head>
 <body>
 
 <h2>Dashboard 🔐</h2>
@@ -8,31 +30,36 @@
 <button onclick="logout()">Logout</button>
 
 <script>
+
 const BASE_URL = "https://iam-project.onrender.com";
 
-const token = localStorage.getItem("token");
-
-// PROTECT PAGE
-if (!token) {
-  alert("Please login first ❌");
-  window.location.href = "index.html";
-}
-
+// CHECK ACCESS
 async function loadData() {
   const res = await fetch(`${BASE_URL}/auth/dashboard`, {
-    headers: {
-      Authorization: "Bearer " + token
-    }
+    credentials: "include"
   });
 
   const data = await res.json();
-  alert(data.message);
+
+  if (res.ok) {
+    alert(data.message);
+  } else {
+    alert("Unauthorized ❌");
+    window.location.href = "index.html";
+  }
 }
 
-function logout() {
-  localStorage.removeItem("token");
+// LOGOUT
+async function logout() {
+  await fetch(`${BASE_URL}/auth/logout`, {
+    method: "POST",
+    credentials: "include"
+  });
+
+  alert("Logged out ✅");
   window.location.href = "index.html";
 }
+
 </script>
 
 </body>
