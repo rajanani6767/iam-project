@@ -15,7 +15,7 @@ body {
   height: 100vh;
 }
 
-/* CARD */
+/* MAIN CARD */
 .container {
   width: 380px;
   padding: 25px;
@@ -27,6 +27,7 @@ body {
 /* TABS */
 .tabs {
   display: flex;
+  justify-content: space-between;
   margin-bottom: 15px;
 }
 
@@ -44,7 +45,7 @@ body {
   color: black;
 }
 
-/* FORMS */
+/* FORM */
 .form {
   display: none;
 }
@@ -76,7 +77,6 @@ button.submit {
 /* PASSWORD STRENGTH */
 #strengthText {
   font-size: 14px;
-  font-weight: bold;
 }
 
 /* GENERATOR */
@@ -88,7 +88,6 @@ button.submit {
 
 #generatedPw {
   margin-top: 10px;
-  font-weight: bold;
 }
 </style>
 
@@ -99,7 +98,7 @@ button.submit {
 <div class="container">
 
 <div class="tabs">
-  <button class="active" onclick="showForm('login')">Login</button>
+  <button onclick="showForm('login')" class="active">Login</button>
   <button onclick="showForm('register')">Register</button>
   <button onclick="showForm('forgot')">Forgot</button>
 </div>
@@ -134,12 +133,12 @@ button.submit {
   <input id="pwLength" type="number" min="8" max="32" value="12">
   <button class="submit" onclick="generatePassword()">Generate</button>
   <p id="generatedPw"></p>
-  <button class="submit" onclick="copyPassword()">Copy</button>
 </div>
 
 </div>
 
 <script>
+
 const BASE_URL = "https://iam-project.onrender.com";
 
 // TAB SWITCH
@@ -152,9 +151,6 @@ function showForm(id) {
 }
 
 // PASSWORD STRENGTH
-const regPass = document.getElementById("regPass");
-const strengthText = document.getElementById("strengthText");
-
 regPass.addEventListener("input", () => {
   const val = regPass.value;
 
@@ -193,7 +189,7 @@ async function register() {
   alert(await res.text());
 }
 
-// LOGIN (REDIRECT)
+// LOGIN
 async function login() {
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
@@ -208,7 +204,7 @@ async function login() {
 
   if (data.token) {
     localStorage.setItem("token", data.token);
-    window.location.href = "dashboard.html";
+    alert("Login Success ✅");
   } else {
     alert("Login failed ❌");
   }
@@ -238,33 +234,13 @@ async function resetPassword() {
   alert(await res.text());
 }
 
-// PASSWORD GENERATOR
+// GENERATOR
 async function generatePassword() {
-  let length = parseInt(pwLength.value);
-
-  if (isNaN(length) || length < 8 || length > 32) {
-    alert("Enter valid length (8–32)");
-    return;
-  }
-
-  const res = await fetch(`${BASE_URL}/auth/generate-password?length=${length}`);
+  const res = await fetch(`${BASE_URL}/auth/generate-password?length=${pwLength.value}`);
   const data = await res.json();
-
   generatedPw.innerText = data.password;
 }
 
-// COPY
-function copyPassword() {
-  const pw = generatedPw.innerText;
-
-  if (!pw) {
-    alert("Generate password first");
-    return;
-  }
-
-  navigator.clipboard.writeText(pw);
-  alert("Copied ✅");
-}
 </script>
 
 </body>
