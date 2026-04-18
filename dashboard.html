@@ -10,9 +10,15 @@
 <script>
 const BASE_URL = "https://iam-project.onrender.com";
 
-async function loadData() {
-  const token = localStorage.getItem("token");
+const token = localStorage.getItem("token");
 
+// PROTECT PAGE
+if (!token) {
+  alert("Please login first ❌");
+  window.location.href = "index.html";
+}
+
+async function loadData() {
   const res = await fetch(`${BASE_URL}/auth/dashboard`, {
     headers: {
       Authorization: "Bearer " + token

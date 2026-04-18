@@ -21,6 +21,7 @@ router.post("/register", async (req, res) => {
   }
 
   try {
+    // 🔥 CHECK DUPLICATE USER
     const checkUser = await db.query(
       "SELECT * FROM users WHERE username=$1",
       [username]
@@ -38,6 +39,7 @@ router.post("/register", async (req, res) => {
     );
 
     res.json({ message: "User Registered ✅" });
+
   } catch (err) {
     res.json({ message: err.message });
   }
@@ -92,16 +94,6 @@ router.post("/send-otp", (req, res) => {
   otpStore[username] = otp;
 
   res.json({ message: "OTP sent (demo)", demoOtp: otp });
-});
-
-router.post("/verify-otp", (req, res) => {
-  const { username, otp } = req.body;
-
-  if (otpStore[username] == otp) {
-    res.json({ message: "OTP Verified ✅" });
-  } else {
-    res.json({ message: "Invalid OTP ❌" });
-  }
 });
 
 // ================= RESET =================

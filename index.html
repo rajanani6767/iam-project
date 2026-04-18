@@ -15,7 +15,6 @@ body {
   height: 100vh;
 }
 
-/* MAIN CARD */
 .container {
   width: 380px;
   padding: 25px;
@@ -24,7 +23,6 @@ body {
   box-shadow: 0 0 20px rgba(0,255,200,0.3);
 }
 
-/* TABS */
 .tabs {
   display: flex;
   justify-content: space-between;
@@ -45,7 +43,6 @@ body {
   color: black;
 }
 
-/* FORM */
 .form {
   display: none;
 }
@@ -74,12 +71,10 @@ button.submit {
   cursor: pointer;
 }
 
-/* PASSWORD STRENGTH */
 #strengthText {
   font-size: 14px;
 }
 
-/* GENERATOR */
 .generator {
   margin-top: 15px;
   padding-top: 10px;
@@ -90,7 +85,6 @@ button.submit {
   margin-top: 10px;
 }
 </style>
-
 </head>
 
 <body>
@@ -176,7 +170,7 @@ regPass.addEventListener("input", () => {
   strengthText.style.color = color;
 });
 
-// ================= REGISTER =================
+// REGISTER
 async function register() {
   const res = await fetch(`${BASE_URL}/auth/register`, {
     method: "POST",
@@ -187,12 +181,14 @@ async function register() {
     })
   });
 
-  const data = await res.json(); // ✅ FIX
+  const data = await res.json();
   alert(data.message);
 }
 
-// ================= LOGIN =================
+// LOGIN
 async function login() {
+  localStorage.removeItem("token"); // clear old
+
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
@@ -206,13 +202,14 @@ async function login() {
 
   if (data.token) {
     localStorage.setItem("token", data.token);
-    alert(data.message); // ✅ FIX
+    alert(data.message);
+    window.location.href = "dashboard.html";
   } else {
-    alert(data.message); // ✅ FIX (THIS SOLVES YOUR ISSUE)
+    alert(data.message);
   }
 }
 
-// ================= OTP =================
+// OTP
 async function sendOtp() {
   const res = await fetch(`${BASE_URL}/auth/send-otp`, {
     method: "POST",
@@ -220,11 +217,11 @@ async function sendOtp() {
     body: JSON.stringify({ username: fpUser.value })
   });
 
-  const data = await res.json(); // ✅ FIX
+  const data = await res.json();
   alert(data.message + " OTP: " + data.demoOtp);
 }
 
-// ================= RESET =================
+// RESET
 async function resetPassword() {
   const res = await fetch(`${BASE_URL}/auth/reset-password`, {
     method: "POST",
@@ -236,11 +233,11 @@ async function resetPassword() {
     })
   });
 
-  const data = await res.json(); // ✅ FIX
+  const data = await res.json();
   alert(data.message);
 }
 
-// ================= GENERATOR =================
+// GENERATOR
 async function generatePassword() {
   const res = await fetch(`${BASE_URL}/auth/generate-password?length=${pwLength.value}`);
   const data = await res.json();
