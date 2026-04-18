@@ -14,10 +14,9 @@ app.use(helmet());
 
 // 🔥 IMPORTANT CORS (CHANGE FRONTEND URL)
 app.use(cors({
-  origin: "https://your-frontend-url.onrender.com",
+  origin: "https://rajanani6767.github.io", // ✅ YOUR REAL FRONTEND
   credentials: true
 }));
-
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan("dev"));
