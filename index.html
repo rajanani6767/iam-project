@@ -65,6 +65,7 @@ button {
   margin-top: 10px;
   border-radius: 8px;
   cursor: pointer;
+  font-weight: bold;
 }
 
 .rules p {
@@ -135,8 +136,13 @@ button {
 <!-- GENERATOR -->
 <div class="generator">
   <h4>Password Generator 🔐</h4>
-  <input id="pwLength" type="number" value="12">
+
+  <input id="pwLength" type="number" value="12" min="8" max="32">
+
+  <p id="pwError" style="color:red; font-size:13px;"></p>
+
   <button onclick="generatePassword()">Generate</button>
+
   <p id="generatedPw"></p>
 </div>
 
@@ -146,7 +152,7 @@ button {
 
 const BASE_URL = "https://iam-project.onrender.com";
 
-// SWITCH TAB
+// TAB SWITCH
 function showForm(id){
   document.querySelectorAll(".form").forEach(f=>f.classList.remove("active"));
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
@@ -228,10 +234,46 @@ async function login(){
 
 // GENERATOR
 async function generatePassword(){
-  const res = await fetch(`${BASE_URL}/auth/generate-password?length=${pwLength.value}`);
+  const length = parseInt(pwLength.value);
+  const errorBox = document.getElementById("pwError");
+
+  errorBox.innerText = "";
+  generatedPw.innerText = "";
+
+  if(isNaN(length)){
+    errorBox.innerText = "Enter a number ❌";
+    return;
+  }
+
+  if(length < 8){
+    errorBox.innerText = "Minimum length is 8 ❌";
+    return;
+  }
+
+  if(length > 32){
+    errorBox.innerText = "Maximum length is 32 ❌";
+    return;
+  }
+
+  const res = await fetch(`${BASE_URL}/auth/generate-password?length=${length}`);
   const data = await res.json();
+
   generatedPw.innerText = data.password;
 }
+
+// LIVE VALIDATION
+pwLength.addEventListener("input", () => {
+  const val = parseInt(pwLength.value);
+  const errorBox = document.getElementById("pwError");
+
+  if(val < 8){
+    errorBox.innerText = "Minimum 8 required ❌";
+  } else if(val > 32){
+    errorBox.innerText = "Max 32 allowed ❌";
+  } else {
+    errorBox.innerText = "";
+  }
+});
 
 // OTP
 async function sendOtp(){
