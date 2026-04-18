@@ -1,91 +1,123 @@
 const express = require("express");
 const router = express.Router();
-
-const controller = require("../controllers/authController");
-const { body } = require("express-validator");
-const { validate } = require("../middleware/validateMiddleware");
-const verifyToken = require("../middleware/authMiddleware");
-
-// TEMP OTP STORE (demo only)
-let otpStore = {};
+const db = require("../db");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const { body, validationResult } = require("express-validator");
 
 // ================= REGISTER =================
 router.post(
   "/register",
   [
-    body("username").isEmail(),
-    body("password").isLength({ min: 8 })
+    body("username")
+      .isEmail()
+      .withMessage("Enter valid email like user@example.com ❌"),
+    body("password")
+      .isLength({ min: 8 })
+      .withMessage("Password must be at least 8 characters ❌"),
   ],
-  validate,
-  controller.register
+  async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { username, password } = req.body;
+
+    try {
+      const checkUser = await db.query(
+        "SELECT * FROM users WHERE username=$1",
+        [username]
+      );
+
+      if (checkUser.rows.length > 0) {
+        return res.status(400).json({
+          message: "User already exists ❌"
+        });
+      }
+
+      const hashed = await bcrypt.hash(password, 10);
+
+      await db.query(
+        "INSERT INTO users(username,password) VALUES($1,$2)",
+        [username, hashed]
+      );
+
+      res.status(201).json({
+        message: "User Registered ✅"
+      });
+
+    } catch (err) {
+      res.status(500).json({ message: "Server error ❌" });
+    }
+  }
 );
 
 // ================= LOGIN =================
-router.post("/login", controller.login);
+router.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const result = await db.query(
+      "SELECT * FROM users WHERE username=$1",
+      [username]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ message: "User not found ❌" });
+    }
+
+    const user = result.rows[0];
+
+    const match = await bcrypt.compare(password, user.password);
+
+    if (!match) {
+      return res.status(400).json({ message: "Invalid password ❌" });
+    }
+
+    const token = jwt.sign(
+      { username },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none"
+    });
+
+    res.json({ message: "Login Success ✅" });
+
+  } catch (err) {
+    res.status(500).json({ message: "Server error ❌" });
+  }
+});
 
 // ================= DASHBOARD =================
-router.get("/dashboard", verifyToken, (req, res) => {
-  res.json({
-    message: `Welcome ${req.user.username} 🔐`
-  });
-});
+router.get("/dashboard", (req, res) => {
+  const token = req.cookies?.token;
 
-// ================= LOGOUT =================
-router.post("/logout", (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: true,
-    sameSite: "none"
-  });
-
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: true,
-    sameSite: "none"
-  });
-
-  res.json({ message: "Logged out ✅" });
-});
-
-// ================= SEND OTP =================
-router.post("/send-otp", (req, res) => {
-  const { username } = req.body;
-
-  const otp = Math.floor(1000 + Math.random() * 9000);
-  otpStore[username] = otp;
-
-  res.json({
-    message: "OTP sent (demo)",
-    demoOtp: otp
-  });
-});
-
-// ================= RESET PASSWORD =================
-router.post("/reset-password", async (req, res) => {
-  const { username, otp, newPassword } = req.body;
-
-  if (otpStore[username] != otp) {
-    return res.status(400).json({ message: "Invalid OTP ❌" });
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized ❌" });
   }
 
-  const bcrypt = require("bcrypt");
-  const db = require("../db");
-
-  const hashed = await bcrypt.hash(newPassword, 10);
-
-  await db.query(
-    "UPDATE users SET password=$1 WHERE username=$2",
-    [hashed, username]
-  );
-
-  delete otpStore[username];
-
-  res.json({ message: "Password Reset Successful ✅" });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    res.json({ message: `Welcome ${decoded.username} 🔐` });
+  } catch {
+    res.status(403).json({ message: "Invalid token ❌" });
+  }
 });
 
 // ================= PASSWORD GENERATOR =================
 router.get("/generate-password", (req, res) => {
-  const length = parseInt(req.query.length) || 12;
+  let length = parseInt(req.query.length) || 12;
+
+  // 🔥 LIMIT FIX
+  if (length < 8) length = 8;
+  if (length > 32) length = 32;
 
   const chars =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@$!%*?&";

@@ -1,27 +1,5 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>Dashboard 🔐</title>
-
-<style>
-body {
-  font-family: Arial, sans-serif;
-  background: #0b0c10;
-  color: #66fcf1;
-  text-align: center;
-  padding-top: 100px;
-}
-
-button {
-  padding: 10px 20px;
-  margin: 10px;
-  background: #45a29e;
-  border: none;
-  cursor: pointer;
-}
-</style>
-
-</head>
 <body>
 
 <h2>Dashboard 🔐</h2>
@@ -30,10 +8,8 @@ button {
 <button onclick="logout()">Logout</button>
 
 <script>
-
 const BASE_URL = "https://iam-project.onrender.com";
 
-// CHECK ACCESS
 async function loadData() {
   const res = await fetch(`${BASE_URL}/auth/dashboard`, {
     credentials: "include"
@@ -45,21 +21,17 @@ async function loadData() {
     alert(data.message);
   } else {
     alert("Unauthorized ❌");
-    window.location.href = "index.html";
   }
 }
 
-// LOGOUT
 async function logout() {
   await fetch(`${BASE_URL}/auth/logout`, {
     method: "POST",
     credentials: "include"
   });
 
-  alert("Logged out ✅");
-  window.location.href = "index.html";
+  window.location = "index.html";
 }
-
 </script>
 
 </body>
