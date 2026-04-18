@@ -6,7 +6,7 @@
 <style>
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: Arial;
   background: #0b0c10;
   color: #66fcf1;
   display: flex;
@@ -15,80 +15,32 @@ body {
   height: 100vh;
 }
 
-/* CARD */
 .container {
-  width: 380px;
+  width: 350px;
   padding: 25px;
   background: #111;
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0,255,200,0.3);
-}
-
-/* TABS */
-.tabs {
-  display: flex;
-  margin-bottom: 15px;
-}
-
-.tabs button {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  background: #1f2833;
-  color: #66fcf1;
-  cursor: pointer;
-}
-
-.tabs button.active {
-  background: #45a29e;
-  color: black;
-}
-
-/* FORMS */
-.form {
-  display: none;
-}
-
-.form.active {
-  display: block;
+  border-radius: 10px;
 }
 
 input {
   width: 100%;
   padding: 10px;
   margin: 8px 0;
-  border-radius: 5px;
-  border: 1px solid #45a29e;
   background: black;
   color: #66fcf1;
+  border: 1px solid #45a29e;
 }
 
-button.submit {
+button {
   width: 100%;
   padding: 10px;
   background: #45a29e;
   border: none;
-  color: black;
-  margin-top: 10px;
   cursor: pointer;
 }
 
-/* PASSWORD STRENGTH */
 #strengthText {
   font-size: 14px;
-  font-weight: bold;
-}
-
-/* GENERATOR */
-.generator {
-  margin-top: 15px;
-  padding-top: 10px;
-  border-top: 1px solid #45a29e;
-}
-
-#generatedPw {
-  margin-top: 10px;
-  font-weight: bold;
 }
 </style>
 
@@ -98,63 +50,33 @@ button.submit {
 
 <div class="container">
 
-<div class="tabs">
-  <button class="active" onclick="showForm('login')">Login</button>
-  <button onclick="showForm('register')">Register</button>
-  <button onclick="showForm('forgot')">Forgot</button>
-</div>
+<h3>Login</h3>
+<input id="logUser" placeholder="Email">
+<input id="logPass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
 
-<!-- LOGIN -->
-<div id="login" class="form active">
-  <input id="logUser" placeholder="Email">
-  <input id="logPass" type="password" placeholder="Password">
-  <button class="submit" onclick="login()">Login</button>
-</div>
+<hr>
 
-<!-- REGISTER -->
-<div id="register" class="form">
-  <input id="regUser" placeholder="Email">
-  <input id="regPass" type="password" placeholder="Password">
-  <div id="strengthText"></div>
-  <button class="submit" onclick="register()">Register</button>
-</div>
+<h3>Register</h3>
+<input id="regUser" placeholder="Email">
+<input id="regPass" type="password" placeholder="Password">
+<div id="strengthText"></div>
+<button onclick="register()">Register</button>
 
-<!-- FORGOT -->
-<div id="forgot" class="form">
-  <input id="fpUser" placeholder="Email">
-  <button class="submit" onclick="sendOtp()">Send OTP</button>
-  <input id="fpOtp" placeholder="OTP">
-  <input id="newPass" type="password" placeholder="New Password">
-  <button class="submit" onclick="resetPassword()">Reset</button>
-</div>
+<hr>
 
-<!-- PASSWORD GENERATOR -->
-<div class="generator">
-  <h4>Password Generator 🔐</h4>
-  <input id="pwLength" type="number" min="8" max="32" value="12">
-  <button class="submit" onclick="generatePassword()">Generate</button>
-  <p id="generatedPw"></p>
-  <button class="submit" onclick="copyPassword()">Copy</button>
-</div>
+<h3>Password Generator</h3>
+<input id="pwLength" type="number" value="12">
+<button onclick="generatePassword()">Generate</button>
+<p id="generatedPw"></p>
 
 </div>
 
 <script>
+
 const BASE_URL = "https://iam-project.onrender.com";
 
-// TAB SWITCH
-function showForm(id) {
-  document.querySelectorAll(".form").forEach(f => f.classList.remove("active"));
-  document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
-
-  document.getElementById(id).classList.add("active");
-  event.target.classList.add("active");
-}
-
 // PASSWORD STRENGTH
-const regPass = document.getElementById("regPass");
-const strengthText = document.getElementById("strengthText");
-
 regPass.addEventListener("input", () => {
   const val = regPass.value;
 
@@ -166,12 +88,7 @@ regPass.addEventListener("input", () => {
     color = "orange";
   }
 
-  if (
-    val.length >= 8 &&
-    /[A-Z]/.test(val) &&
-    /\d/.test(val) &&
-    /[@$!%*?&]/.test(val)
-  ) {
+  if (val.length >= 8 && /[@$!%*?&]/.test(val)) {
     strength = "Strong ✅";
     color = "lime";
   }
@@ -190,10 +107,11 @@ async function register() {
       password: regPass.value
     })
   });
+
   alert(await res.text());
 }
 
-// LOGIN (REDIRECT)
+// LOGIN
 async function login() {
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
@@ -206,65 +124,21 @@ async function login() {
 
   const data = await res.json();
 
-  if (data.token) {
+  if (data.success && data.token) {
     localStorage.setItem("token", data.token);
     window.location.href = "dashboard.html";
   } else {
-    alert("Login failed ❌");
+    alert(data.message);
   }
 }
 
-// OTP
-async function sendOtp() {
-  const res = await fetch(`${BASE_URL}/auth/send-otp`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ username: fpUser.value })
-  });
-  alert(await res.text());
-}
-
-// RESET
-async function resetPassword() {
-  const res = await fetch(`${BASE_URL}/auth/reset-password`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      username: fpUser.value,
-      otp: fpOtp.value,
-      newPassword: newPass.value
-    })
-  });
-  alert(await res.text());
-}
-
-// PASSWORD GENERATOR
+// GENERATOR
 async function generatePassword() {
-  let length = parseInt(pwLength.value);
-
-  if (isNaN(length) || length < 8 || length > 32) {
-    alert("Enter valid length (8–32)");
-    return;
-  }
-
-  const res = await fetch(`${BASE_URL}/auth/generate-password?length=${length}`);
+  const res = await fetch(`${BASE_URL}/auth/generate-password?length=${pwLength.value}`);
   const data = await res.json();
-
   generatedPw.innerText = data.password;
 }
 
-// COPY
-function copyPassword() {
-  const pw = generatedPw.innerText;
-
-  if (!pw) {
-    alert("Generate password first");
-    return;
-  }
-
-  navigator.clipboard.writeText(pw);
-  alert("Copied ✅");
-}
 </script>
 
 </body>

@@ -1,61 +1,22 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>Dashboard 🔐</title>
-
-<style>
-body {
-  margin: 0;
-  font-family: Arial;
-  background: #0b0c10;
-  color: #66fcf1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-.card {
-  background: #111;
-  padding: 30px;
-  border-radius: 10px;
-  text-align: center;
-  box-shadow: 0 0 20px rgba(0,255,200,0.3);
-}
-
-button {
-  padding: 10px 20px;
-  background: #45a29e;
-  border: none;
-  margin-top: 15px;
-  cursor: pointer;
-}
-</style>
-
-</head>
-
 <body>
 
-<div class="card">
-  <h2>Dashboard 🔐</h2>
+<h2>Dashboard 🔐</h2>
+<p id="userData"></p>
 
-  <p id="userData">Loading user data...</p>
-
-  <button onclick="logout()">Logout</button>
-</div>
+<button onclick="logout()">Logout</button>
 
 <script>
 const BASE_URL = "https://iam-project.onrender.com";
 
-// 🔐 Protect page
 const token = localStorage.getItem("token");
 
 if (!token) {
-  alert("Please login first ❌");
+  alert("Login first ❌");
   window.location.href = "index.html";
 }
 
-// ✅ Auto load data (no button needed)
 async function loadData() {
   const res = await fetch(`${BASE_URL}/auth/dashboard`, {
     headers: {
@@ -64,17 +25,11 @@ async function loadData() {
   });
 
   const data = await res.json();
-
-  if (data.message) {
-    document.getElementById("userData").innerText = data.message;
-  } else {
-    document.getElementById("userData").innerText = "Access denied ❌";
-  }
+  userData.innerText = data.message;
 }
 
 loadData();
 
-// 🔓 Logout
 function logout() {
   localStorage.removeItem("token");
   window.location.href = "index.html";
