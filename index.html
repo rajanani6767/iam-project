@@ -1,101 +1,49 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Auth System 🔐</title>
-
-<style>
-body {
-  margin: 0;
-  font-family: Arial;
-  background: #0b0c10;
-  color: #66fcf1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-.container {
-  width: 350px;
-  padding: 25px;
-  background: #111;
-  border-radius: 10px;
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
-  background: black;
-  color: #66fcf1;
-  border: 1px solid #45a29e;
-}
-
-button {
-  width: 100%;
-  padding: 10px;
-  background: #45a29e;
-  border: none;
-  cursor: pointer;
-}
-
-#strengthText {
-  font-size: 14px;
-}
-</style>
-
+<title>Auth App</title>
 </head>
 
 <body>
 
-<div class="container">
-
-<h3>Login</h3>
-<input id="logUser" placeholder="Email">
-<input id="logPass" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
-
-<hr>
-
-<h3>Register</h3>
-<input id="regUser" placeholder="Email">
-<input id="regPass" type="password" placeholder="Password">
-<div id="strengthText"></div>
+<h2>Register</h2>
+<input id="regUser" placeholder="Email"><br>
+<input id="regPass" type="password" placeholder="Password"><br>
 <button onclick="register()">Register</button>
 
 <hr>
 
-<h3>Password Generator</h3>
-<input id="pwLength" type="number" value="12">
+<h2>Login</h2>
+<input id="logUser" placeholder="Email"><br>
+<input id="logPass" type="password" placeholder="Password"><br>
+<button onclick="login()">Login</button>
+
+<hr>
+
+<h2>OTP</h2>
+<input id="otpUser" placeholder="Email"><br>
+<button onclick="sendOtp()">Send OTP</button><br>
+<input id="otpValue" placeholder="OTP"><br>
+<button onclick="verifyOtp()">Verify OTP</button>
+
+<hr>
+
+<h2>Forgot Password</h2>
+<input id="fpUser" placeholder="Email"><br>
+<input id="fpOtp" placeholder="OTP"><br>
+<input id="newPass" type="password" placeholder="New Password"><br>
+<button onclick="resetPassword()">Reset</button>
+
+<hr>
+
+<h2>Password Generator</h2>
+<input id="pwLength" type="number" value="12"><br>
 <button onclick="generatePassword()">Generate</button>
 <p id="generatedPw"></p>
-
-</div>
 
 <script>
 
 const BASE_URL = "https://iam-project.onrender.com";
-
-// PASSWORD STRENGTH
-regPass.addEventListener("input", () => {
-  const val = regPass.value;
-
-  let strength = "Weak ❌";
-  let color = "red";
-
-  if (val.length >= 8 && /[A-Z]/.test(val) && /\d/.test(val)) {
-    strength = "Medium ⚠️";
-    color = "orange";
-  }
-
-  if (val.length >= 8 && /[@$!%*?&]/.test(val)) {
-    strength = "Strong ✅";
-    color = "lime";
-  }
-
-  strengthText.innerText = "Strength: " + strength;
-  strengthText.style.color = color;
-});
 
 // REGISTER
 async function register() {
@@ -108,10 +56,11 @@ async function register() {
     })
   });
 
-  alert(await res.text());
+  const data = await res.json();
+  alert(data.message);
 }
 
-// LOGIN
+// LOGIN (OLD)
 async function login() {
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
@@ -123,13 +72,50 @@ async function login() {
   });
 
   const data = await res.json();
+  alert(data.message); // ✅ no redirect
+}
 
-  if (data.success && data.token) {
-    localStorage.setItem("token", data.token);
-    window.location.href = "dashboard.html";
-  } else {
-    alert(data.message);
-  }
+// OTP
+async function sendOtp() {
+  const res = await fetch(`${BASE_URL}/auth/send-otp`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ username: otpUser.value })
+  });
+
+  const data = await res.json();
+  alert(data.message);
+}
+
+// VERIFY
+async function verifyOtp() {
+  const res = await fetch(`${BASE_URL}/auth/verify-otp`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      username: otpUser.value,
+      otp: otpValue.value
+    })
+  });
+
+  const data = await res.json();
+  alert(data.message);
+}
+
+// RESET
+async function resetPassword() {
+  const res = await fetch(`${BASE_URL}/auth/reset-password`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      username: fpUser.value,
+      otp: fpOtp.value,
+      newPassword: newPass.value
+    })
+  });
+
+  const data = await res.json();
+  alert(data.message);
 }
 
 // GENERATOR
