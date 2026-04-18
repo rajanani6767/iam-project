@@ -176,7 +176,7 @@ regPass.addEventListener("input", () => {
   strengthText.style.color = color;
 });
 
-// REGISTER
+// ================= REGISTER =================
 async function register() {
   const res = await fetch(`${BASE_URL}/auth/register`, {
     method: "POST",
@@ -186,10 +186,12 @@ async function register() {
       password: regPass.value
     })
   });
-  alert(await res.text());
+
+  const data = await res.json(); // ✅ FIX
+  alert(data.message);
 }
 
-// LOGIN
+// ================= LOGIN =================
 async function login() {
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
@@ -204,23 +206,25 @@ async function login() {
 
   if (data.token) {
     localStorage.setItem("token", data.token);
-    alert("Login Success ✅");
+    alert(data.message); // ✅ FIX
   } else {
-    alert("Login failed ❌");
+    alert(data.message); // ✅ FIX (THIS SOLVES YOUR ISSUE)
   }
 }
 
-// OTP
+// ================= OTP =================
 async function sendOtp() {
   const res = await fetch(`${BASE_URL}/auth/send-otp`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ username: fpUser.value })
   });
-  alert(await res.text());
+
+  const data = await res.json(); // ✅ FIX
+  alert(data.message + " OTP: " + data.demoOtp);
 }
 
-// RESET
+// ================= RESET =================
 async function resetPassword() {
   const res = await fetch(`${BASE_URL}/auth/reset-password`, {
     method: "POST",
@@ -231,10 +235,12 @@ async function resetPassword() {
       newPassword: newPass.value
     })
   });
-  alert(await res.text());
+
+  const data = await res.json(); // ✅ FIX
+  alert(data.message);
 }
 
-// GENERATOR
+// ================= GENERATOR =================
 async function generatePassword() {
   const res = await fetch(`${BASE_URL}/auth/generate-password?length=${pwLength.value}`);
   const data = await res.json();

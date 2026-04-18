@@ -21,6 +21,15 @@ router.post("/register", async (req, res) => {
   }
 
   try {
+    const checkUser = await db.query(
+      "SELECT * FROM users WHERE username=$1",
+      [username]
+    );
+
+    if (checkUser.rows.length > 0) {
+      return res.json({ message: "User already exists ❌" });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await db.query(
@@ -49,6 +58,7 @@ router.post("/login", async (req, res) => {
     }
 
     const user = result.rows[0];
+
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -68,7 +78,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// ================= PROTECTED ROUTE =================
+// ================= PROTECTED =================
 router.get("/dashboard", verifyToken, (req, res) => {
   res.json({
     message: `Welcome ${req.user.username} 🔐`,

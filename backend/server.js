@@ -9,7 +9,6 @@ require("dotenv").config();
 
 const app = express();
 
-// ✅ Security
 app.use(helmet());
 
 const limiter = rateLimit({
@@ -19,16 +18,12 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// ✅ CORS
 app.use(cors({ origin: "*" }));
-
 app.use(express.json());
 
-// Routes
 const authRoutes = require("./routes/auth");
 app.use("/auth", authRoutes);
 
-// Test
 app.get("/", (req, res) => {
   res.send("Server Running 🚀");
 });
