@@ -11,8 +11,8 @@ app.use(cookieParser());
 // ✅ FIXED CORS (IMPORTANT)
 app.use(cors({
   origin: [
-    "http://localhost:5173",            // local React
-    "https://iam-project.onrender.com"  // deployed frontend
+    "http://localhost:5173",
+    "https://rajanani6767.github.io"  // 🔥 ADD THIS
   ],
   credentials: true
 }));
