@@ -26,8 +26,7 @@ app.use(cors({
   credentials: true
 }));
 
-// ✅ FIXED HERE
-app.options("/*", cors());
+// ❌ REMOVE app.options completely (IMPORTANT)
 
 const authRoutes = require("./routes/auth");
 app.use("/auth", authRoutes);
