@@ -8,15 +8,19 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-// 🔥 IMPORTANT FIX
+// ✅ FIXED CORS (IMPORTANT)
 app.use(cors({
-  origin: "https://rajanani6767.github.io",
+  origin: [
+    "http://localhost:5173",            // local React
+    "https://iam-project.onrender.com"  // deployed frontend
+  ],
   credentials: true
 }));
 
 const authRoutes = require("./routes/auth");
 app.use("/auth", authRoutes);
 
+// TEST ROUTE
 app.get("/", (req, res) => {
   res.send("Server Running 🚀");
 });
