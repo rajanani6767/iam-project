@@ -5,26 +5,43 @@ require("dotenv").config();
 
 const app = express();
 
+// ✅ MIDDLEWARE
 app.use(express.json());
 app.use(cookieParser());
 
-// ✅ FIXED CORS (IMPORTANT)
+// ✅ FINAL CORS FIX (WORKS FOR GITHUB + LOCAL + RENDER)
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://rajanani6767.github.io"
+];
+
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://rajanani6767.github.io"  // 🔥 ADD THIS
-  ],
+  origin: function (origin, callback) {
+    // allow requests with no origin (Postman, curl)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("CORS not allowed: " + origin));
+    }
+  },
   credentials: true
 }));
 
+// ✅ HANDLE PREFLIGHT (VERY IMPORTANT)
+app.options("*", cors());
+
+// ✅ ROUTES
 const authRoutes = require("./routes/auth");
 app.use("/auth", authRoutes);
 
-// TEST ROUTE
+// ✅ TEST ROUTE
 app.get("/", (req, res) => {
   res.send("Server Running 🚀");
 });
 
+// ✅ PORT
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
