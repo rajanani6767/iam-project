@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import ReCAPTCHA from "react-google-recaptcha";
 
 const BASE_URL = "https://iam-project.onrender.com";
+const SITE_KEY = "6LdXVcYsAAAAAP9I3xwxYhBLbANLirzHUs4LU_SB"; // 🔥 replace
 
 export default function AuthPage() {
   const [tab, setTab] = useState("login");
@@ -16,15 +18,22 @@ export default function AuthPage() {
   const [pwLength, setPwLength] = useState(12);
   const [pwError, setPwError] = useState("");
 
+  const [captcha, setCaptcha] = useState(null);
+
   const navigate = useNavigate();
 
   // LOGIN
   const login = async () => {
+    if (!captcha) return alert("Verify CAPTCHA ❌");
+
     const res = await fetch(`${BASE_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ username: email, password }),
+      body: JSON.stringify({
+        username: email,
+        password,
+        captcha,
+      }),
     });
 
     const data = await res.json();
@@ -54,7 +63,7 @@ export default function AuthPage() {
     }
   };
 
-  // GENERATOR
+  // PASSWORD GENERATOR
   const generatePassword = async () => {
     setPwError("");
 
@@ -69,28 +78,18 @@ export default function AuthPage() {
     setGeneratedPw(data.password);
   };
 
- const sendOtp = async () => {
-  const res = await fetch(`${BASE_URL}/auth/send-otp`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: email }),
-  });
+  // SEND OTP
+  const sendOtp = async () => {
+    const res = await fetch(`${BASE_URL}/auth/send-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: email }),
+    });
 
-  let data;
-
-  try {
-    data = await res.json();
-  } catch {
-    alert("Server error ❌");
-    return;
-  }
-
-  if (res.ok) {
+    const data = await res.json();
     alert(data.message);
-  } else {
-    alert(data.message || "Failed ❌");
-  }
-};
+  };
+
   // RESET PASSWORD
   const resetPassword = async () => {
     const res = await fetch(`${BASE_URL}/auth/reset-password`, {
@@ -108,100 +107,148 @@ export default function AuthPage() {
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
+    <div
+      style={{
+        background: "#0a0a0a",
+        minHeight: "100vh",
+        color: "white",
+        textAlign: "center",
+        paddingTop: "30px",
+      }}
+    >
       <h2>Secure Auth 🔐</h2>
 
-      {/* TABS */}
+      {/* Tabs */}
       <div>
         <button onClick={() => setTab("login")}>Login</button>
         <button onClick={() => setTab("register")}>Register</button>
         <button onClick={() => setTab("forgot")}>Forgot</button>
       </div>
 
-      {/* 🔥 WRAPPED UI BOX */}
+      {/* Main Card */}
       <div
         style={{
           width: "350px",
-          margin: "20px auto",
-          padding: "20px",
+          margin: "30px auto",
+          padding: "25px",
           background: "#111",
-          color: "white",
-          borderRadius: "10px",
+          borderRadius: "15px",
+          boxShadow: "0 0 15px rgba(0,0,0,0.8)",
         }}
       >
-        {/* LOGIN */}
         {tab === "login" && (
           <>
             <input
               placeholder="Email"
               onChange={(e) => setEmail(e.target.value)}
-            /><br /><br />
+            />
+            <br />
             <input
               type="password"
               placeholder="Password"
               onChange={(e) => setPassword(e.target.value)}
-            /><br /><br />
+            />
+            <br />
+
+            {/* 🔥 CAPTCHA ADDED */}
+            <div style={{ margin: "10px 0" }}>
+              <ReCAPTCHA
+                sitekey={SITE_KEY}
+                onChange={(val) => setCaptcha(val)}
+              />
+            </div>
+
             <button onClick={login}>Login</button>
           </>
         )}
 
-        {/* REGISTER */}
         {tab === "register" && (
           <>
             <input
               placeholder="Email"
               onChange={(e) => setEmail(e.target.value)}
-            /><br /><br />
+            />
+            <br />
             <input
               type="password"
               placeholder="Password"
               onChange={(e) => setPassword(e.target.value)}
-            /><br /><br />
+            />
+            <br />
             <button onClick={register}>Register</button>
           </>
         )}
 
-        {/* FORGOT */}
         {tab === "forgot" && (
           <>
             <input
               placeholder="Email"
               onChange={(e) => setEmail(e.target.value)}
-            /><br /><br />
-
-            <button onClick={sendOtp}>Send OTP</button><br /><br />
-
+            />
+            <br />
+            <button onClick={sendOtp}>Send OTP</button>
+            <br />
             <input
               placeholder="OTP"
               onChange={(e) => setOtp(e.target.value)}
-            /><br /><br />
-
+            />
+            <br />
             <input
               placeholder="New Password"
               onChange={(e) => setNewPass(e.target.value)}
-            /><br /><br />
-
-            <button onClick={resetPassword}>Reset Password</button>
+            />
+            <br />
+            <button onClick={resetPassword}>Reset</button>
           </>
         )}
       </div>
 
-      <hr />
+      {/* Password Generator Box */}
+      <div
+        style={{
+          width: "350px",
+          margin: "40px auto",
+          padding: "20px",
+          background: "#1a1a1a",
+          borderRadius: "15px",
+          boxShadow: "0 0 15px rgba(0,0,0,0.6)",
+        }}
+      >
+        <h4>Password Generator 🔐</h4>
 
-      {/* GENERATOR */}
-      <h4>Password Generator 🔐</h4>
+        <input
+          type="number"
+          value={pwLength}
+          onChange={(e) => setPwLength(parseInt(e.target.value))}
+        />
 
-      <input
-        type="number"
-        value={pwLength}
-        onChange={(e) => setPwLength(parseInt(e.target.value))}
-      />
+        <p style={{ color: "red" }}>{pwError}</p>
 
-      <p style={{ color: "red" }}>{pwError}</p>
+        <button onClick={generatePassword}>Generate</button>
 
-      <button onClick={generatePassword}>Generate</button>
+        <div
+          style={{
+            marginTop: "15px",
+            padding: "10px",
+            background: "#000",
+            borderRadius: "8px",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <span>{generatedPw || "Your password will appear here"}</span>
 
-      <p>{generatedPw}</p>
+          <button
+            onClick={() => {
+              if (!generatedPw) return;
+              navigator.clipboard.writeText(generatedPw);
+              alert("Copied ✅");
+            }}
+          >
+            📋
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

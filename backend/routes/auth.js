@@ -4,9 +4,31 @@ const db = require("../db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
+const axios = require("axios"); // 🔥 ADD THIS
 
 const { saveOtp, verifyOtp } = require("../services/otpService");
 const { sendOtpEmail } = require("../services/emailService");
+
+// 🔐 CAPTCHA VERIFY FUNCTION
+const verifyCaptcha = async (token) => {
+  try {
+    const res = await axios.post(
+      "https://www.google.com/recaptcha/api/siteverify",
+      null,
+      {
+        params: {
+          secret: process.env.RECAPTCHA_SECRET,
+          response: token,
+        },
+      }
+    );
+
+    return res.data.success;
+  } catch (err) {
+    console.log("Captcha error:", err.message);
+    return false;
+  }
+};
 
 // ================= REGISTER =================
 router.post(
@@ -49,9 +71,15 @@ router.post(
   }
 );
 
-// ================= LOGIN =================
+// ================= LOGIN (UPDATED WITH CAPTCHA) =================
 router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, captcha } = req.body;
+
+  // 🔥 CAPTCHA CHECK
+  const isHuman = await verifyCaptcha(captcha);
+  if (!isHuman) {
+    return res.status(400).json({ message: "CAPTCHA failed ❌" });
+  }
 
   try {
     const result = await db.query(
@@ -118,8 +146,7 @@ router.post("/send-otp", async (req, res) => {
     await saveOtp(username, otp);
     await sendOtpEmail(username, otp);
 
-    // TEMP DEBUG (remove later)
-    console.log("OTP:", otp);
+    console.log("OTP:", otp); // debug
 
     res.json({ message: "OTP sent to your email ✅" });
   } catch (err) {
@@ -150,7 +177,6 @@ router.post("/reset-password", async (req, res) => {
       [hashed, username]
     );
 
-    // DELETE OTP AFTER USE
     await db.query("DELETE FROM otps WHERE email=$1", [username]);
 
     res.json({ message: "Password reset successful ✅" });
