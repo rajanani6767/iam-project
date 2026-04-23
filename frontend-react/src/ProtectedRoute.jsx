@@ -8,9 +8,12 @@ export default function ProtectedRoute({ children }) {
 
   useEffect(() => {
     fetch(`${BASE_URL}/auth/dashboard`, {
-      credentials: "include",
+      credentials: "include",   // 🔥 IMPORTANT
     })
-      .then(res => setIsAuth(res.ok))
+      .then((res) => {
+        if (res.ok) setIsAuth(true);
+        else setIsAuth(false);
+      })
       .catch(() => setIsAuth(false));
   }, []);
 

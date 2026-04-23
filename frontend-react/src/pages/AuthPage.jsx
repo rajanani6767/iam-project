@@ -22,17 +22,21 @@ export default function AuthPage() {
 
   const navigate = useNavigate();
 
-  // LOGIN
+  // ================= LOGIN =================
   const login = async () => {
-    if (!captcha) return alert("Verify CAPTCHA ❌");
+    if (!captcha) {
+      alert("Verify CAPTCHA ❌");
+      return;
+    }
 
     const res = await fetch(`${BASE_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include", // 🔥 FIX
       body: JSON.stringify({
         username: email,
-        password,
-        captcha,
+        password: password,
+        captcha: captcha,
       }),
     });
 
@@ -46,12 +50,16 @@ export default function AuthPage() {
     }
   };
 
-  // REGISTER
+  // ================= REGISTER =================
   const register = async () => {
     const res = await fetch(`${BASE_URL}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: email, password }),
+      credentials: "include", // 🔥 FIX
+      body: JSON.stringify({
+        username: email,
+        password: password,
+      }),
     });
 
     const data = await res.json();
@@ -63,41 +71,55 @@ export default function AuthPage() {
     }
   };
 
-  // PASSWORD GENERATOR
+  // ================= PASSWORD GENERATOR =================
   const generatePassword = async () => {
     setPwError("");
 
-    if (pwLength < 8) return setPwError("Minimum 8 ❌");
-    if (pwLength > 32) return setPwError("Max 32 ❌");
+    if (pwLength < 8) {
+      setPwError("Minimum 8 ❌");
+      return;
+    }
+
+    if (pwLength > 32) {
+      setPwError("Max 32 ❌");
+      return;
+    }
 
     const res = await fetch(
-      `${BASE_URL}/auth/generate-password?length=${pwLength}`
+      `${BASE_URL}/auth/generate-password?length=${pwLength}`,
+      {
+        credentials: "include", // 🔥 FIX
+      }
     );
-    const data = await res.json();
 
+    const data = await res.json();
     setGeneratedPw(data.password);
   };
 
-  // SEND OTP
+  // ================= SEND OTP =================
   const sendOtp = async () => {
     const res = await fetch(`${BASE_URL}/auth/send-otp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: email }),
+      credentials: "include", // 🔥 FIX
+      body: JSON.stringify({
+        username: email,
+      }),
     });
 
     const data = await res.json();
     alert(data.message);
   };
 
-  // RESET PASSWORD
+  // ================= RESET PASSWORD =================
   const resetPassword = async () => {
     const res = await fetch(`${BASE_URL}/auth/reset-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include", // 🔥 FIX
       body: JSON.stringify({
         username: email,
-        otp,
+        otp: otp,
         newPassword: newPass,
       }),
     });
@@ -143,6 +165,7 @@ export default function AuthPage() {
               onChange={(e) => setEmail(e.target.value)}
             />
             <br />
+
             <input
               type="password"
               placeholder="Password"
@@ -150,7 +173,6 @@ export default function AuthPage() {
             />
             <br />
 
-            {/* 🔥 CAPTCHA ADDED */}
             <div style={{ margin: "10px 0" }}>
               <ReCAPTCHA
                 sitekey={SITE_KEY}
@@ -169,12 +191,14 @@ export default function AuthPage() {
               onChange={(e) => setEmail(e.target.value)}
             />
             <br />
+
             <input
               type="password"
               placeholder="Password"
               onChange={(e) => setPassword(e.target.value)}
             />
             <br />
+
             <button onClick={register}>Register</button>
           </>
         )}
@@ -186,18 +210,22 @@ export default function AuthPage() {
               onChange={(e) => setEmail(e.target.value)}
             />
             <br />
+
             <button onClick={sendOtp}>Send OTP</button>
             <br />
+
             <input
               placeholder="OTP"
               onChange={(e) => setOtp(e.target.value)}
             />
             <br />
+
             <input
               placeholder="New Password"
               onChange={(e) => setNewPass(e.target.value)}
             />
             <br />
+
             <button onClick={resetPassword}>Reset</button>
           </>
         )}
