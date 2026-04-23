@@ -69,23 +69,28 @@ export default function AuthPage() {
     setGeneratedPw(data.password);
   };
 
-  // SEND OTP
-  const sendOtp = async () => {
-    const res = await fetch(`${BASE_URL}/auth/send-otp`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: email }),
-    });
+ const sendOtp = async () => {
+  const res = await fetch(`${BASE_URL}/auth/send-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: email }),
+  });
 
-    const data = await res.json();
+  let data;
 
-    if (res.ok) {
-      alert(data.message); // ✅ correct
-    } else {
-      alert(data.message);
-    }
-  };
+  try {
+    data = await res.json();
+  } catch {
+    alert("Server error ❌");
+    return;
+  }
 
+  if (res.ok) {
+    alert(data.message);
+  } else {
+    alert(data.message || "Failed ❌");
+  }
+};
   // RESET PASSWORD
   const resetPassword = async () => {
     const res = await fetch(`${BASE_URL}/auth/reset-password`, {

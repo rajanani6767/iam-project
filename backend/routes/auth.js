@@ -5,7 +5,6 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
 
-// ✅ NEW IMPORTS
 const { saveOtp, verifyOtp } = require("../services/otpService");
 const { sendOtpEmail } = require("../services/emailService");
 
@@ -13,9 +12,7 @@ const { sendOtpEmail } = require("../services/emailService");
 router.post(
   "/register",
   [
-    body("username")
-      .isEmail()
-      .withMessage("Enter valid email like user@example.com ❌"),
+    body("username").isEmail().withMessage("Enter valid email ❌"),
     body("password")
       .isLength({ min: 8 })
       .withMessage("Password must be at least 8 characters ❌"),
@@ -35,9 +32,7 @@ router.post(
       );
 
       if (checkUser.rows.length > 0) {
-        return res.status(400).json({
-          message: "User already exists ❌"
-        });
+        return res.status(400).json({ message: "User already exists ❌" });
       }
 
       const hashed = await bcrypt.hash(password, 10);
@@ -47,11 +42,8 @@ router.post(
         [username, hashed]
       );
 
-      res.status(201).json({
-        message: "User Registered ✅"
-      });
-
-    } catch (err) {
+      res.status(201).json({ message: "User Registered ✅" });
+    } catch {
       res.status(500).json({ message: "Server error ❌" });
     }
   }
@@ -72,7 +64,6 @@ router.post("/login", async (req, res) => {
     }
 
     const user = result.rows[0];
-
     const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
@@ -88,12 +79,11 @@ router.post("/login", async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,
       secure: true,
-      sameSite: "none"
+      sameSite: "none",
     });
 
     res.json({ message: "Login Success ✅" });
-
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Server error ❌" });
   }
 });
@@ -118,11 +108,18 @@ router.get("/dashboard", (req, res) => {
 router.post("/send-otp", async (req, res) => {
   const { username } = req.body;
 
+  if (!username) {
+    return res.status(400).json({ message: "Email required ❌" });
+  }
+
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
   try {
     await saveOtp(username, otp);
     await sendOtpEmail(username, otp);
+
+    // TEMP DEBUG (remove later)
+    console.log("OTP:", otp);
 
     res.json({ message: "OTP sent to your email ✅" });
   } catch (err) {
@@ -131,9 +128,13 @@ router.post("/send-otp", async (req, res) => {
   }
 });
 
-// ================= RESET PASSWORD (FIXED 🔥) =================
+// ================= RESET PASSWORD =================
 router.post("/reset-password", async (req, res) => {
   const { username, otp, newPassword } = req.body;
+
+  if (!username || !otp || !newPassword) {
+    return res.status(400).json({ message: "All fields required ❌" });
+  }
 
   const valid = await verifyOtp(username, otp);
 
@@ -149,15 +150,11 @@ router.post("/reset-password", async (req, res) => {
       [hashed, username]
     );
 
-    // 🔥 IMPORTANT: DELETE USED OTP
-    await db.query(
-      "DELETE FROM otps WHERE email=$1 AND otp=$2",
-      [username, otp]
-    );
+    // DELETE OTP AFTER USE
+    await db.query("DELETE FROM otps WHERE email=$1", [username]);
 
     res.json({ message: "Password reset successful ✅" });
-
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Server error ❌" });
   }
 });
