@@ -69,7 +69,7 @@ export default function AuthPage() {
     setGeneratedPw(data.password);
   };
 
-  // OTP
+  // SEND OTP
   const sendOtp = async () => {
     const res = await fetch(`${BASE_URL}/auth/send-otp`, {
       method: "POST",
@@ -78,10 +78,15 @@ export default function AuthPage() {
     });
 
     const data = await res.json();
-    alert("OTP: " + data.demoOtp);
+
+    if (res.ok) {
+      alert(data.message); // ✅ correct
+    } else {
+      alert(data.message);
+    }
   };
 
-  // RESET
+  // RESET PASSWORD
   const resetPassword = async () => {
     const res = await fetch(`${BASE_URL}/auth/reset-password`, {
       method: "POST",
@@ -107,45 +112,74 @@ export default function AuthPage() {
         <button onClick={() => setTab("register")}>Register</button>
         <button onClick={() => setTab("forgot")}>Forgot</button>
       </div>
-      <div style={{
-  width: "350px",
-  margin: "auto",
-  padding: "20px",
-  background: "#111",
-  color: "white",
-  borderRadius: "10px"
-}}>
-    
-</div>
 
-      {/* LOGIN */}
-      {tab === "login" && (
-        <>
-          <input placeholder="Email" onChange={e => setEmail(e.target.value)} /><br />
-          <input type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} /><br />
-          <button onClick={login}>Login</button>
-        </>
-      )}
+      {/* 🔥 WRAPPED UI BOX */}
+      <div
+        style={{
+          width: "350px",
+          margin: "20px auto",
+          padding: "20px",
+          background: "#111",
+          color: "white",
+          borderRadius: "10px",
+        }}
+      >
+        {/* LOGIN */}
+        {tab === "login" && (
+          <>
+            <input
+              placeholder="Email"
+              onChange={(e) => setEmail(e.target.value)}
+            /><br /><br />
+            <input
+              type="password"
+              placeholder="Password"
+              onChange={(e) => setPassword(e.target.value)}
+            /><br /><br />
+            <button onClick={login}>Login</button>
+          </>
+        )}
 
-      {/* REGISTER */}
-      {tab === "register" && (
-        <>
-          <input placeholder="Email" onChange={e => setEmail(e.target.value)} /><br />
-          <input type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} /><br />
-          <button onClick={register}>Register</button>
-        </>
-      )}
+        {/* REGISTER */}
+        {tab === "register" && (
+          <>
+            <input
+              placeholder="Email"
+              onChange={(e) => setEmail(e.target.value)}
+            /><br /><br />
+            <input
+              type="password"
+              placeholder="Password"
+              onChange={(e) => setPassword(e.target.value)}
+            /><br /><br />
+            <button onClick={register}>Register</button>
+          </>
+        )}
 
-      {/* FORGOT */}
-      {tab === "forgot" && (
-        <>
-          <input placeholder="Email" onChange={e => setEmail(e.target.value)} /><br />
-          <button onClick={sendOtp}>Send OTP</button><br />
-          <input placeholder="OTP" onChange={e => setOtp(e.target.value)} /><br />
-          <input placeholder="New Password" onChange={e => setNewPass(e.target.value)} /><br />
-          <button onClick={resetPassword}>Reset</button>
-        </>
-      )}
+        {/* FORGOT */}
+        {tab === "forgot" && (
+          <>
+            <input
+              placeholder="Email"
+              onChange={(e) => setEmail(e.target.value)}
+            /><br /><br />
+
+            <button onClick={sendOtp}>Send OTP</button><br /><br />
+
+            <input
+              placeholder="OTP"
+              onChange={(e) => setOtp(e.target.value)}
+            /><br /><br />
+
+            <input
+              placeholder="New Password"
+              onChange={(e) => setNewPass(e.target.value)}
+            /><br /><br />
+
+            <button onClick={resetPassword}>Reset Password</button>
+          </>
+        )}
+      </div>
 
       <hr />
 
