@@ -114,7 +114,7 @@ router.get("/dashboard", (req, res) => {
   }
 });
 
-// ================= SEND OTP (NEW) =================
+// ================= SEND OTP =================
 router.post("/send-otp", async (req, res) => {
   const { username } = req.body;
 
@@ -131,7 +131,7 @@ router.post("/send-otp", async (req, res) => {
   }
 });
 
-// ================= RESET PASSWORD (NEW) =================
+// ================= RESET PASSWORD (FIXED 🔥) =================
 router.post("/reset-password", async (req, res) => {
   const { username, otp, newPassword } = req.body;
 
@@ -149,7 +149,14 @@ router.post("/reset-password", async (req, res) => {
       [hashed, username]
     );
 
+    // 🔥 IMPORTANT: DELETE USED OTP
+    await db.query(
+      "DELETE FROM otps WHERE email=$1 AND otp=$2",
+      [username, otp]
+    );
+
     res.json({ message: "Password reset successful ✅" });
+
   } catch (err) {
     res.status(500).json({ message: "Server error ❌" });
   }
