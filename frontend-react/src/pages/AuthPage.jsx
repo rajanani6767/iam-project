@@ -8,8 +8,17 @@ const SITE_KEY = "6LdXVcYsAAAAAP9I3xwxYhBLbANLirzHUs4LU_SB";
 export default function AuthPage() {
   const [tab, setTab] = useState("login");
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+ 
+ 
+
+  // 🔥 ADDED STATES (DO NOT REMOVE ABOVE)
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+
+  const [forgotEmail, setForgotEmail] = useState("");
 
   const [otp, setOtp] = useState("");
   const [newPass, setNewPass] = useState("");
@@ -27,15 +36,14 @@ export default function AuthPage() {
 
   const navigate = useNavigate();
 
-  // PASSWORD RULES
+  // 🔥 ONLY CHANGE: password → regPassword
   const rules = {
-    length: password.length >= 8,
-    lower: /[a-z]/.test(password),
-    upper: /[A-Z]/.test(password),
-    special: /[@$!%*?&]/.test(password),
+    length: regPassword.length >= 8,
+    lower: /[a-z]/.test(regPassword),
+    upper: /[A-Z]/.test(regPassword),
+    special: /[@$!%*?&]/.test(regPassword),
   };
 
-  // STYLES
   const inputStyle = {
     width: "90%",
     padding: "10px",
@@ -73,14 +81,15 @@ export default function AuthPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ username: email, password, captcha }),
+      // 🔥 CHANGED ONLY THIS LINE
+      body: JSON.stringify({ username: loginEmail, password: loginPassword, captcha }),
     });
 
     const data = await res.json();
 
     if (data.mfa) {
       setShowLoginOtp(true);
-      setTempUser(email);
+      setTempUser(loginEmail);
       alert("OTP sent 🔐");
     } else {
       alert(data.message);
@@ -99,6 +108,10 @@ export default function AuthPage() {
     const data = await res.json();
 
     if (res.ok) {
+      // 🔥 ADDED ONLY
+      setLoginEmail("");
+      setLoginPassword("");
+
       navigate("/dashboard");
     } else {
       alert(data.message);
@@ -114,7 +127,8 @@ export default function AuthPage() {
     const res = await fetch(`${BASE_URL}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: email, password }),
+      // 🔥 CHANGED ONLY THIS LINE
+      body: JSON.stringify({ username: regEmail, password: regPassword }),
     });
 
     const data = await res.json();
@@ -126,7 +140,8 @@ export default function AuthPage() {
     const res = await fetch(`${BASE_URL}/auth/send-otp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: email }),
+      // 🔥 CHANGED ONLY THIS LINE
+      body: JSON.stringify({ username: forgotEmail }),
     });
 
     const data = await res.json();
@@ -138,8 +153,9 @@ export default function AuthPage() {
     const res = await fetch(`${BASE_URL}/auth/reset-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      // 🔥 CHANGED ONLY THIS LINE
       body: JSON.stringify({
-        username: email,
+        username: forgotEmail,
         otp,
         newPassword: newPass,
       }),
@@ -149,7 +165,7 @@ export default function AuthPage() {
     alert(data.message);
   };
 
-  // PASSWORD GENERATOR
+  // PASSWORD GENERATOR (UNCHANGED)
   const generatePassword = async () => {
     if (pwLength < 8 || pwLength > 32) {
       return setPwError("8-32 only ❌");
@@ -202,19 +218,20 @@ export default function AuthPage() {
       <div style={cardStyle}>
         {tab === "login" && (
           <>
+            {/* 🔥 CHANGED ONLY */}
             <input
               style={inputStyle}
               placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={loginEmail}
+              onChange={(e) => setLoginEmail(e.target.value)}
             />
 
             <input
               style={inputStyle}
               type="password"
               placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
             />
 
             <div style={{ margin: "15px 0" }}>
@@ -245,19 +262,20 @@ export default function AuthPage() {
 
         {tab === "register" && (
           <>
+            {/* 🔥 CHANGED ONLY */}
             <input
               style={inputStyle}
               placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={regEmail}
+              onChange={(e) => setRegEmail(e.target.value)}
             />
 
             <input
               style={inputStyle}
               type="password"
               placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={regPassword}
+              onChange={(e) => setRegPassword(e.target.value)}
             />
 
             {/* PASSWORD RULE BOX */}
@@ -293,11 +311,12 @@ export default function AuthPage() {
 
         {tab === "forgot" && (
           <>
+            {/* 🔥 CHANGED ONLY */}
             <input
               style={inputStyle}
               placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={forgotEmail}
+              onChange={(e) => setForgotEmail(e.target.value)}
             />
 
             <button style={btnStyle} onClick={sendOtp}>
@@ -325,7 +344,7 @@ export default function AuthPage() {
         )}
       </div>
 
-      {/* PASSWORD GENERATOR */}
+      {/* PASSWORD GENERATOR (UNCHANGED — STILL HERE ✅) */}
       <div style={{ ...cardStyle, marginTop: "30px" }}>
         <h3>Password Generator 🔐</h3>
 
