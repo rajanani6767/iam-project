@@ -4,12 +4,12 @@ const db = require("../db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
-const axios = require("axios"); // 🔥 ADD THIS
+const axios = require("axios");
 
 const { saveOtp, verifyOtp } = require("../services/otpService");
 const { sendOtpEmail } = require("../services/emailService");
 
-// 🔐 CAPTCHA VERIFY FUNCTION
+// ================= CAPTCHA VERIFY =================
 const verifyCaptcha = async (token) => {
   try {
     const res = await axios.post(
@@ -29,13 +29,15 @@ const verifyCaptcha = async (token) => {
     return false;
   }
 };
+
+// ================= LOGOUT =================
 router.post("/logout", (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
     secure: true,
     sameSite: "none",
   });
-  res.json({ message: "Logged out" });
+  res.json({ message: "Logged out 👋" });
 });
 
 // ================= REGISTER =================
@@ -73,17 +75,17 @@ router.post(
       );
 
       res.status(201).json({ message: "User Registered ✅" });
-    } catch {
+    } catch (err) {
+      console.error(err);
       res.status(500).json({ message: "Server error ❌" });
     }
   }
 );
 
-// ================= LOGIN (UPDATED WITH CAPTCHA) =================
+// ================= LOGIN =================
 router.post("/login", async (req, res) => {
   const { username, password, captcha } = req.body;
 
-  // 🔥 CAPTCHA CHECK
   const isHuman = await verifyCaptcha(captcha);
   if (!isHuman) {
     return res.status(400).json({ message: "CAPTCHA failed ❌" });
@@ -120,7 +122,8 @@ router.post("/login", async (req, res) => {
     });
 
     res.json({ message: "Login Success ✅" });
-  } catch {
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Server error ❌" });
   }
 });
@@ -153,14 +156,19 @@ router.post("/send-otp", async (req, res) => {
 
   try {
     await saveOtp(username, otp);
-    await sendOtpEmail(username, otp);
 
-    console.log("OTP:", otp); // debug
+    const sent = await sendOtpEmail(username, otp);
+
+    if (!sent) {
+      return res.status(500).json({ message: "Failed to send OTP ❌" });
+    }
+
+    console.log("OTP:", otp);
 
     res.json({ message: "OTP sent to your email ✅" });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Failed to send OTP ❌" });
+    console.error("OTP error:", err);
+    res.status(500).json({ message: "Server error ❌" });
   }
 });
 
@@ -189,7 +197,8 @@ router.post("/reset-password", async (req, res) => {
     await db.query("DELETE FROM otps WHERE email=$1", [username]);
 
     res.json({ message: "Password reset successful ✅" });
-  } catch {
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Server error ❌" });
   }
 });
