@@ -202,19 +202,42 @@ export default function AuthPage() {
       <div style={cardStyle}>
         {tab === "login" && (
           <>
-            <input style={inputStyle} placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
-            <input style={inputStyle} type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+            <input
+              style={inputStyle}
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+
+            <input
+              style={inputStyle}
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
 
             <div style={{ margin: "15px 0" }}>
               <ReCAPTCHA sitekey={SITE_KEY} onChange={setCaptcha} />
             </div>
 
-            {!showLoginOtp && <button style={btnStyle} onClick={login}>Login</button>}
+            {!showLoginOtp && (
+              <button style={btnStyle} onClick={login}>
+                Login
+              </button>
+            )}
 
             {showLoginOtp && (
               <>
-                <input style={inputStyle} placeholder="Enter OTP" onChange={(e) => setLoginOtp(e.target.value)} />
-                <button style={btnStyle} onClick={verifyLoginOtp}>Verify OTP</button>
+                <input
+                  style={inputStyle}
+                  placeholder="Enter OTP"
+                  value={loginOtp}
+                  onChange={(e) => setLoginOtp(e.target.value)}
+                />
+                <button style={btnStyle} onClick={verifyLoginOtp}>
+                  Verify OTP
+                </button>
               </>
             )}
           </>
@@ -222,29 +245,82 @@ export default function AuthPage() {
 
         {tab === "register" && (
           <>
-            <input style={inputStyle} placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
-            <input style={inputStyle} type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+            <input
+              style={inputStyle}
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
 
+            <input
+              style={inputStyle}
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+
+            {/* PASSWORD RULE BOX */}
             <div style={{ textAlign: "left", fontSize: "13px" }}>
-              <p style={{ color: rules.length ? "lime" : "red" }}>✔ Min 8 characters</p>
-              <p style={{ color: rules.lower ? "lime" : "red" }}>✔ Lowercase</p>
-              <p style={{ color: rules.upper ? "lime" : "red" }}>✔ Uppercase</p>
-              <p style={{ color: rules.special ? "lime" : "red" }}>✔ Special char</p>
+              <p style={{ color: rules.length ? "lime" : "red" }}>
+                ✔ Min 8 characters
+              </p>
+              <p style={{ color: rules.lower ? "lime" : "red" }}>
+                ✔ Lowercase
+              </p>
+              <p style={{ color: rules.upper ? "lime" : "red" }}>
+                ✔ Uppercase
+              </p>
+              <p style={{ color: rules.special ? "lime" : "red" }}>
+                ✔ Special char (@$!%*?&)
+              </p>
             </div>
 
-            <button style={btnStyle} onClick={register}>Register</button>
+            <button
+              style={btnStyle}
+              onClick={register}
+              disabled={
+                !rules.length ||
+                !rules.lower ||
+                !rules.upper ||
+                !rules.special
+              }
+            >
+              Register
+            </button>
           </>
         )}
 
         {tab === "forgot" && (
           <>
-            <input style={inputStyle} placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
-            <button style={btnStyle} onClick={sendOtp}>Send OTP</button>
+            <input
+              style={inputStyle}
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
 
-            <input style={inputStyle} placeholder="OTP" onChange={(e) => setOtp(e.target.value)} />
-            <input style={inputStyle} placeholder="New Password" onChange={(e) => setNewPass(e.target.value)} />
+            <button style={btnStyle} onClick={sendOtp}>
+              Send OTP
+            </button>
 
-            <button style={btnStyle} onClick={resetPassword}>Reset Password</button>
+            <input
+              style={inputStyle}
+              placeholder="OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+            />
+
+            <input
+              style={inputStyle}
+              placeholder="New Password"
+              value={newPass}
+              onChange={(e) => setNewPass(e.target.value)}
+            />
+
+            <button style={btnStyle} onClick={resetPassword}>
+              Reset Password
+            </button>
           </>
         )}
       </div>
@@ -253,26 +329,37 @@ export default function AuthPage() {
       <div style={{ ...cardStyle, marginTop: "30px" }}>
         <h3>Password Generator 🔐</h3>
 
-        <input style={inputStyle} type="number" value={pwLength} onChange={(e) => setPwLength(e.target.value)} />
+        <input
+          style={inputStyle}
+          type="number"
+          value={pwLength}
+          onChange={(e) => setPwLength(e.target.value)}
+        />
 
         <p style={{ color: "red" }}>{pwError}</p>
 
-        <button style={btnStyle} onClick={generatePassword}>Generate</button>
+        <button style={btnStyle} onClick={generatePassword}>
+          Generate
+        </button>
 
-        <div style={{
-          marginTop: "15px",
-          padding: "10px",
-          background: "#000",
-          borderRadius: "10px",
-          display: "flex",
-          justifyContent: "space-between"
-        }}>
+        <div
+          style={{
+            marginTop: "15px",
+            padding: "10px",
+            background: "#000",
+            borderRadius: "10px",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
           <span>{generatedPw || "Your password will appear here"}</span>
 
-          <button onClick={() => {
-            navigator.clipboard.writeText(generatedPw);
-            alert("Copied ✅");
-          }}>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(generatedPw);
+              alert("Copied ✅");
+            }}
+          >
             📋
           </button>
         </div>
