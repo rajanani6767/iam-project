@@ -36,6 +36,7 @@ router.post("/logout", (req, res) => {
     httpOnly: true,
     secure: true,
     sameSite: "none",
+    path: "/",
   });
   res.json({ message: "Logged out 👋" });
 });
@@ -144,7 +145,7 @@ router.get("/dashboard", (req, res) => {
   }
 });
 
-// ================= SEND OTP =================
+// ================= SEND OTP (SECURE FIX) =================
 router.post("/send-otp", async (req, res) => {
   const { username } = req.body;
 
@@ -152,9 +153,21 @@ router.post("/send-otp", async (req, res) => {
     return res.status(400).json({ message: "Email required ❌" });
   }
 
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
   try {
+    // 🔐 CHECK IF USER EXISTS
+    const result = await db.query(
+      "SELECT * FROM users WHERE username=$1",
+      [username]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({
+        message: "User not registered ❌",
+      });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
     await saveOtp(username, otp);
 
     const sent = await sendOtpEmail(username, otp);
@@ -166,6 +179,7 @@ router.post("/send-otp", async (req, res) => {
     console.log("OTP:", otp);
 
     res.json({ message: "OTP sent to your email ✅" });
+
   } catch (err) {
     console.error("OTP error:", err);
     res.status(500).json({ message: "Server error ❌" });
