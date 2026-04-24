@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import ReCAPTCHA from "react-google-recaptcha";
 
 const BASE_URL = "https://iam-project.onrender.com";
-const SITE_KEY = "6LdXVcYsAAAAAP9I3xwxYhBLbANLirzHUs4LU_SB"; // 🔥 replace
+const SITE_KEY = "6LdXVcYsAAAAAP9I3xwxYhBLbANLirzHUs4LU_SB";
 
 export default function AuthPage() {
   const [tab, setTab] = useState("login");
@@ -20,9 +20,14 @@ export default function AuthPage() {
 
   const [captcha, setCaptcha] = useState(null);
 
+  // 🔥 MFA STATES
+  const [showLoginOtp, setShowLoginOtp] = useState(false);
+  const [loginOtp, setLoginOtp] = useState("");
+  const [tempUser, setTempUser] = useState("");
+
   const navigate = useNavigate();
 
-  // ================= LOGIN =================
+  // ================= LOGIN (MFA) =================
   const login = async () => {
     if (!captcha) {
       alert("Verify CAPTCHA ❌");
@@ -32,11 +37,34 @@ export default function AuthPage() {
     const res = await fetch(`${BASE_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include", // 🔥 FIX
+      credentials: "include",
       body: JSON.stringify({
         username: email,
         password: password,
         captcha: captcha,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.mfa) {
+      setShowLoginOtp(true);
+      setTempUser(email);
+      alert("OTP sent to your email 🔐");
+    } else {
+      alert(data.message);
+    }
+  };
+
+  // ================= VERIFY LOGIN OTP =================
+  const verifyLoginOtp = async () => {
+    const res = await fetch(`${BASE_URL}/auth/verify-login-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        username: tempUser,
+        otp: loginOtp,
       }),
     });
 
@@ -55,7 +83,7 @@ export default function AuthPage() {
     const res = await fetch(`${BASE_URL}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include", // 🔥 FIX
+      credentials: "include",
       body: JSON.stringify({
         username: email,
         password: password,
@@ -69,6 +97,38 @@ export default function AuthPage() {
     } else {
       alert(data.message);
     }
+  };
+
+  // ================= SEND OTP (FORGOT) =================
+  const sendOtp = async () => {
+    const res = await fetch(`${BASE_URL}/auth/send-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        username: email,
+      }),
+    });
+
+    const data = await res.json();
+    alert(data.message);
+  };
+
+  // ================= RESET PASSWORD =================
+  const resetPassword = async () => {
+    const res = await fetch(`${BASE_URL}/auth/reset-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        username: email,
+        otp: otp,
+        newPassword: newPass,
+      }),
+    });
+
+    const data = await res.json();
+    alert(data.message);
   };
 
   // ================= PASSWORD GENERATOR =================
@@ -87,57 +147,21 @@ export default function AuthPage() {
 
     const res = await fetch(
       `${BASE_URL}/auth/generate-password?length=${pwLength}`,
-      {
-        credentials: "include", // 🔥 FIX
-      }
+      { credentials: "include" }
     );
 
     const data = await res.json();
     setGeneratedPw(data.password);
   };
 
-  // ================= SEND OTP =================
-  const sendOtp = async () => {
-    const res = await fetch(`${BASE_URL}/auth/send-otp`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include", // 🔥 FIX
-      body: JSON.stringify({
-        username: email,
-      }),
-    });
-
-    const data = await res.json();
-    alert(data.message);
-  };
-
-  // ================= RESET PASSWORD =================
-  const resetPassword = async () => {
-    const res = await fetch(`${BASE_URL}/auth/reset-password`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include", // 🔥 FIX
-      body: JSON.stringify({
-        username: email,
-        otp: otp,
-        newPassword: newPass,
-      }),
-    });
-
-    const data = await res.json();
-    alert(data.message);
-  };
-
   return (
-    <div
-      style={{
-        background: "#0a0a0a",
-        minHeight: "100vh",
-        color: "white",
-        textAlign: "center",
-        paddingTop: "30px",
-      }}
-    >
+    <div style={{
+      background: "#0a0a0a",
+      minHeight: "100vh",
+      color: "white",
+      textAlign: "center",
+      paddingTop: "30px"
+    }}>
       <h2>Secure Auth 🔐</h2>
 
       {/* Tabs */}
@@ -148,131 +172,89 @@ export default function AuthPage() {
       </div>
 
       {/* Main Card */}
-      <div
-        style={{
-          width: "350px",
-          margin: "30px auto",
-          padding: "25px",
-          background: "#111",
-          borderRadius: "15px",
-          boxShadow: "0 0 15px rgba(0,0,0,0.8)",
-        }}
-      >
+      <div style={{
+        width: "350px",
+        margin: "30px auto",
+        padding: "25px",
+        background: "#111",
+        borderRadius: "15px"
+      }}>
+
+        {/* LOGIN */}
         {tab === "login" && (
           <>
-            <input
-              placeholder="Email"
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <br />
+            <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} /><br />
 
-            <input
-              type="password"
-              placeholder="Password"
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <br />
+            <input type="password" placeholder="Password"
+              onChange={(e) => setPassword(e.target.value)} /><br />
 
-            <div style={{ margin: "10px 0" }}>
-              <ReCAPTCHA
-                sitekey={SITE_KEY}
-                onChange={(val) => setCaptcha(val)}
-              />
-            </div>
+            <ReCAPTCHA sitekey={SITE_KEY} onChange={(val) => setCaptcha(val)} />
 
-            <button onClick={login}>Login</button>
+            {!showLoginOtp && <button onClick={login}>Login</button>}
+
+            {showLoginOtp && (
+              <>
+                <input placeholder="Enter OTP"
+                  onChange={(e) => setLoginOtp(e.target.value)} /><br />
+                <button onClick={verifyLoginOtp}>Verify OTP</button>
+              </>
+            )}
           </>
         )}
 
+        {/* REGISTER */}
         {tab === "register" && (
           <>
-            <input
-              placeholder="Email"
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <br />
-
-            <input
-              type="password"
-              placeholder="Password"
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <br />
-
+            <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} /><br />
+            <input type="password" placeholder="Password"
+              onChange={(e) => setPassword(e.target.value)} /><br />
             <button onClick={register}>Register</button>
           </>
         )}
 
+        {/* FORGOT */}
         {tab === "forgot" && (
           <>
-            <input
-              placeholder="Email"
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <br />
-
-            <button onClick={sendOtp}>Send OTP</button>
-            <br />
-
-            <input
-              placeholder="OTP"
-              onChange={(e) => setOtp(e.target.value)}
-            />
-            <br />
-
-            <input
-              placeholder="New Password"
-              onChange={(e) => setNewPass(e.target.value)}
-            />
-            <br />
-
+            <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} /><br />
+            <button onClick={sendOtp}>Send OTP</button><br />
+            <input placeholder="OTP" onChange={(e) => setOtp(e.target.value)} /><br />
+            <input placeholder="New Password"
+              onChange={(e) => setNewPass(e.target.value)} /><br />
             <button onClick={resetPassword}>Reset</button>
           </>
         )}
       </div>
 
-      {/* Password Generator Box */}
-      <div
-        style={{
-          width: "350px",
-          margin: "40px auto",
-          padding: "20px",
-          background: "#1a1a1a",
-          borderRadius: "15px",
-          boxShadow: "0 0 15px rgba(0,0,0,0.6)",
-        }}
-      >
+      {/* PASSWORD GENERATOR */}
+      <div style={{
+        width: "350px",
+        margin: "40px auto",
+        padding: "20px",
+        background: "#1a1a1a",
+        borderRadius: "15px"
+      }}>
         <h4>Password Generator 🔐</h4>
 
-        <input
-          type="number"
-          value={pwLength}
-          onChange={(e) => setPwLength(parseInt(e.target.value))}
-        />
+        <input type="number" value={pwLength}
+          onChange={(e) => setPwLength(parseInt(e.target.value))} />
 
         <p style={{ color: "red" }}>{pwError}</p>
 
         <button onClick={generatePassword}>Generate</button>
 
-        <div
-          style={{
-            marginTop: "15px",
-            padding: "10px",
-            background: "#000",
-            borderRadius: "8px",
-            display: "flex",
-            justifyContent: "space-between",
-          }}
-        >
-          <span>{generatedPw || "Your password will appear here"}</span>
+        <div style={{
+          marginTop: "15px",
+          padding: "10px",
+          background: "#000",
+          display: "flex",
+          justifyContent: "space-between"
+        }}>
+          <span>{generatedPw || "Password here"}</span>
 
-          <button
-            onClick={() => {
-              if (!generatedPw) return;
-              navigator.clipboard.writeText(generatedPw);
-              alert("Copied ✅");
-            }}
-          >
+          <button onClick={() => {
+            navigator.clipboard.writeText(generatedPw);
+            alert("Copied ✅");
+          }}>
             📋
           </button>
         </div>

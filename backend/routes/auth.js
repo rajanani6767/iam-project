@@ -9,7 +9,7 @@ const axios = require("axios");
 const { saveOtp, verifyOtp } = require("../services/otpService");
 const { sendOtpEmail } = require("../services/emailService");
 
-// ================= CAPTCHA VERIFY =================
+// ================= CAPTCHA =================
 const verifyCaptcha = async (token) => {
   try {
     const res = await axios.post(
@@ -22,10 +22,8 @@ const verifyCaptcha = async (token) => {
         },
       }
     );
-
     return res.data.success;
-  } catch (err) {
-    console.log("Captcha error:", err.message);
+  } catch {
     return false;
   }
 };
@@ -52,19 +50,13 @@ router.post(
   ],
   async (req, res) => {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { username, password } = req.body;
 
     try {
-      const checkUser = await db.query(
-        "SELECT * FROM users WHERE username=$1",
-        [username]
-      );
-
-      if (checkUser.rows.length > 0) {
+      const check = await db.query("SELECT * FROM users WHERE username=$1", [username]);
+      if (check.rows.length > 0) {
         return res.status(400).json({ message: "User already exists ❌" });
       }
 
@@ -75,15 +67,14 @@ router.post(
         [username, hashed]
       );
 
-      res.status(201).json({ message: "User Registered ✅" });
-    } catch (err) {
-      console.error(err);
+      res.json({ message: "User Registered ✅" });
+    } catch {
       res.status(500).json({ message: "Server error ❌" });
     }
   }
 );
 
-// ================= LOGIN =================
+// ================= LOGIN (MFA ADDED) =================
 router.post("/login", async (req, res) => {
   const { username, password, captcha } = req.body;
 
@@ -109,24 +100,52 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid password ❌" });
     }
 
-    const token = jwt.sign(
-      { username },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    // 🔥 MFA: SEND OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      path: "/",
+    await saveOtp(username, otp);
+    await sendOtpEmail(username, otp);
+
+    res.json({
+      message: "OTP sent to email 🔐",
+      mfa: true,
+      username,
     });
 
-    res.json({ message: "Login Success ✅" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error ❌" });
   }
+});
+
+// ================= VERIFY LOGIN OTP (NEW) =================
+router.post("/verify-login-otp", async (req, res) => {
+  const { username, otp } = req.body;
+
+  if (!username || !otp) {
+    return res.status(400).json({ message: "All fields required ❌" });
+  }
+
+  const valid = await verifyOtp(username, otp);
+
+  if (!valid) {
+    return res.status(400).json({ message: "Invalid OTP ❌" });
+  }
+
+  const token = jwt.sign(
+    { username },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" }
+  );
+
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    path: "/",
+  });
+
+  res.json({ message: "Login success ✅" });
 });
 
 // ================= DASHBOARD =================
@@ -145,45 +164,25 @@ router.get("/dashboard", (req, res) => {
   }
 });
 
-// ================= SEND OTP (SECURE FIX) =================
+// ================= SEND OTP (RESET PASSWORD) =================
 router.post("/send-otp", async (req, res) => {
   const { username } = req.body;
 
-  if (!username) {
-    return res.status(400).json({ message: "Email required ❌" });
+  const result = await db.query(
+    "SELECT * FROM users WHERE username=$1",
+    [username]
+  );
+
+  if (result.rows.length === 0) {
+    return res.status(400).json({ message: "User not registered ❌" });
   }
 
-  try {
-    // 🔐 CHECK IF USER EXISTS
-    const result = await db.query(
-      "SELECT * FROM users WHERE username=$1",
-      [username]
-    );
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    if (result.rows.length === 0) {
-      return res.status(400).json({
-        message: "User not registered ❌",
-      });
-    }
+  await saveOtp(username, otp);
+  await sendOtpEmail(username, otp);
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    await saveOtp(username, otp);
-
-    const sent = await sendOtpEmail(username, otp);
-
-    if (!sent) {
-      return res.status(500).json({ message: "Failed to send OTP ❌" });
-    }
-
-    console.log("OTP:", otp);
-
-    res.json({ message: "OTP sent to your email ✅" });
-
-  } catch (err) {
-    console.error("OTP error:", err);
-    res.status(500).json({ message: "Server error ❌" });
-  }
+  res.json({ message: "OTP sent to your email ✅" });
 });
 
 // ================= RESET PASSWORD =================
@@ -200,21 +199,16 @@ router.post("/reset-password", async (req, res) => {
     return res.status(400).json({ message: "Invalid or expired OTP ❌" });
   }
 
-  try {
-    const hashed = await bcrypt.hash(newPassword, 10);
+  const hashed = await bcrypt.hash(newPassword, 10);
 
-    await db.query(
-      "UPDATE users SET password=$1 WHERE username=$2",
-      [hashed, username]
-    );
+  await db.query(
+    "UPDATE users SET password=$1 WHERE username=$2",
+    [hashed, username]
+  );
 
-    await db.query("DELETE FROM otps WHERE email=$1", [username]);
+  await db.query("DELETE FROM otps WHERE email=$1", [username]);
 
-    res.json({ message: "Password reset successful ✅" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error ❌" });
-  }
+  res.json({ message: "Password reset successful ✅" });
 });
 
 // ================= PASSWORD GENERATOR =================
