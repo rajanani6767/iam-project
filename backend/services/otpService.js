@@ -28,7 +28,7 @@ exports.verifyOtp = async (email, otp) => {
 
   const record = result.rows[0];
 
-  // ❌ EXPIRED → DELETE
+  // 🔥 EXPIRED → DELETE + BLOCK
   if (new Date(record.expires_at) < new Date()) {
     await db.query("DELETE FROM otps WHERE email=$1", [email]);
     return false;

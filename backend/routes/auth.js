@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
 const axios = require("axios");
+const crypto = require('crypto'); 
 
 const { saveOtp, verifyOtp } = require("../services/otpService");
 const { sendOtpEmail } = require("../services/emailService");
@@ -218,16 +219,19 @@ router.get("/generate-password", (req, res) => {
   if (length < 8) length = 8;
   if (length > 32) length = 32;
 
-  const chars =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@$!%*?&";
+  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@$!%*?&";
 
   let password = "";
 
+  // 2. The secure loop
   for (let i = 0; i < length; i++) {
-    password += chars[Math.floor(Math.random() * chars.length)];
+    // This replaces Math.random() with cryptographic randomness
+    const randomIndex = crypto.randomInt(0, chars.length);
+    password += chars[randomIndex];
   }
 
   res.json({ password });
 });
 
+ 
 module.exports = router;
