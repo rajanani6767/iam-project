@@ -5,10 +5,22 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
 const axios = require("axios");
+const rateLimit = require("express-rate-limit");
 
 const { saveOtp, verifyOtp } = require("../services/otpService");
 const { sendOtpEmail } = require("../services/emailService");
 
+const otpLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 min
+  max: 3,
+  message: "Too many OTP requests ❌"
+});
+
+const loginLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  message: "Too many login attempts ❌"
+});
 // ================= CAPTCHA =================
 const verifyCaptcha = async (token) => {
   try {
@@ -75,7 +87,7 @@ router.post(
 );
 
 // ================= LOGIN (MFA ADDED) =================
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
   const { username, password, captcha } = req.body;
 
   const isHuman = await verifyCaptcha(captcha);
@@ -106,8 +118,8 @@ if (!match) {
 }
 
     // 🔥 MFA: SEND OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
+  const crypto = require("crypto");
+const otp = crypto.randomInt(100000, 999999).toString();
     await saveOtp(username, otp);
     await sendOtpEmail(username, otp);
 
@@ -170,7 +182,7 @@ router.get("/dashboard", (req, res) => {
 });
 
 // ================= SEND OTP (RESET PASSWORD) =================
-router.post("/send-otp", async (req, res) => {
+router.post("/send-otp", otpLimiter, async (req, res) => {
   const { username } = req.body;
 
   const result = await db.query(
