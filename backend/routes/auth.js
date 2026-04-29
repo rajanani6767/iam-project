@@ -89,16 +89,21 @@ router.post("/login", async (req, res) => {
       [username]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(400).json({ message: "User not found ❌" });
-    }
-
     const user = result.rows[0];
-    const match = await bcrypt.compare(password, user.password);
 
-    if (!match) {
-      return res.status(400).json({ message: "Invalid password ❌" });
-    }
+if (!user) {
+  return res.status(400).json({
+    message: "Invalid email or password ❌"
+  });
+}
+
+const match = await bcrypt.compare(password, user.password);
+
+if (!match) {
+  return res.status(400).json({
+    message: "Invalid email or password ❌"
+  });
+}
 
     // 🔥 MFA: SEND OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -173,18 +178,18 @@ router.post("/send-otp", async (req, res) => {
     [username]
   );
 
-  if (result.rows.length === 0) {
-    return res.status(400).json({ message: "User not registered ❌" });
-  }
-
+  // ONLY send if user exists
+if (result.rows.length > 0) {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
   await saveOtp(username, otp);
   await sendOtpEmail(username, otp);
+}
 
-  res.json({ message: "OTP sent to your email ✅" });
+// SAME RESPONSE ALWAYS
+res.json({
+  message: "OTP sent to your email if registered ✅"
 });
-
 // ================= RESET PASSWORD =================
 router.post("/reset-password", async (req, res) => {
   const { username, otp, newPassword } = req.body;
