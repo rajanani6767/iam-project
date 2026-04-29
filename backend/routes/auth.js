@@ -190,6 +190,7 @@ if (result.rows.length > 0) {
 res.json({
   message: "OTP sent to your email if registered ✅"
 });
+  }); 
 // ================= RESET PASSWORD =================
 router.post("/reset-password", async (req, res) => {
   const { username, otp, newPassword } = req.body;
