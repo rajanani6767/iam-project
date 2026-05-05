@@ -153,22 +153,37 @@ router.post("/verify-login-otp", async (req, res) => {
     return res.status(400).json({ message: "Invalid OTP ❌" });
   }
 
-  const token = jwt.sign(
-    { username },
-    process.env.JWT_SECRET,
-    { expiresIn: "1h" }
-  );
+ // 🔥 fetch role from DB
+const result = await db.query(
+  "SELECT role FROM users WHERE username=$1",
+  [username]
+);
 
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-    path: "/",
-  });
+const user = result.rows[0];
 
-  res.json({ message: "Login success ✅" });
+// 🔥 create token with role
+const token = jwt.sign(
+  {
+    username: username,
+    role: user.role
+  },
+  process.env.JWT_SECRET,
+  { expiresIn: "1h" }
+);
+
+// 🍪 cookie (optional but good)
+res.cookie("token", token, {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+  path: "/",
 });
 
+// 🔥 ALSO send token in response
+res.json({
+  message: "Login success ✅",
+  token   // ✅ IMPORTANT
+});
 // ================= DASHBOARD =================
 router.get("/dashboard", (req, res) => {
   const token = req.cookies?.token;
