@@ -51,12 +51,13 @@ exports.register = async (req, res) => {
 
 // ================= LOGIN =================
 exports.login = async (req, res) => {
+  const user = req.body.username || req.body.email;
+
   try {
     const { accessToken, refreshToken } =
-      await service.loginUser(req.body.username, req.body.password);
+      await service.loginUser(user, req.body.password);
 
-    // 🔥 LOG SUCCESS (DB)
-    await logEvent(req.body.username, "login_success");
+    await logEvent(user, "login_success");
 
     res.cookie("token", accessToken, {
       httpOnly: true,
@@ -71,12 +72,11 @@ exports.login = async (req, res) => {
     });
 
     res.json({ message: "Login Success ✅" });
-  } catch (err) {
-    logger.error(err.message);
-    
 
-    // 🔥 LOG FAILED LOGIN (IMPORTANT)
-    await logEvent(req.body.username, "login_failed");
+  } catch (err) {
+    console.log("❌ LOGIN FAILED HIT");
+
+    await logEvent(user || "unknown_user", "login_failed");
 
     res.status(401).json({ message: err.message });
   }
