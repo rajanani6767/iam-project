@@ -1,14 +1,8 @@
-const { Client } = require("pg");
-require("dotenv").config();
+db.connect()
+  .then(() => console.log("DB Connected ✅"))
+  .catch(err => console.log("DB ERROR 👉", err));
 
-const db = new Client({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    require: true,
-    rejectUnauthorized: false,
-  },
-});
-
+module.exports = db;
 db.connect()
   .then(() => console.log("DB Connected ✅"))
   .catch(err => console.log("DB ERROR 👉", err));
