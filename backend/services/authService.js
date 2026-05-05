@@ -22,7 +22,7 @@ exports.registerUser = async (username, password) => {
 
 exports.loginUser = async (username, password) => {
   const result = await db.query(
-    "SELECT * FROM users WHERE username=$1",
+    "SELECT * FROM users WHERE username=$1 OR email=$1",
     [username]
   );
 
