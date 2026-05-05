@@ -5,6 +5,9 @@ require("dotenv").config();
 
 const app = express();
 
+// 🔥 ADD THIS LINE HERE (VERY IMPORTANT)
+app.set("trust proxy", 1);
+
 app.use(express.json());
 app.use(cookieParser());
 
