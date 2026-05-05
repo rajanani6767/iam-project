@@ -102,16 +102,20 @@ router.post("/login", loginLimiter, async (req, res) => {
     );
 
     const user = result.rows[0];
+    const { logEvent } = require("../utils/securityLogger");
 
 if (!user) {
+  await logEvent(username, "login_failed");  // 🔥 ADD THIS
+
   return res.status(400).json({
     message: "Invalid email or password ❌"
   });
 }
 
 const match = await bcrypt.compare(password, user.password);
-
 if (!match) {
+  await logEvent(username, "login_failed");  // 🔥 ADD THIS
+
   return res.status(400).json({
     message: "Invalid email or password ❌"
   });
