@@ -1,6 +1,14 @@
 const db = require("../db");
 const bcrypt = require("bcrypt");
 
+// 🔥 NEW: Security Event Logger
+const fs = require("fs");
+
+function logEvent(event) {
+  const log = `${new Date().toISOString()},${event}\n`;
+  fs.appendFileSync("./logs.txt", log);
+}
+
 // ================= SAVE OTP (HASHED + SINGLE ACTIVE) =================
 exports.saveOtp = async (email, otp) => {
   const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
@@ -15,6 +23,9 @@ exports.saveOtp = async (email, otp) => {
     "INSERT INTO otps(email, otp, expires_at) VALUES($1,$2,$3)",
     [email, hashedOtp, expires]
   );
+
+  // 🔥 LOG OTP SENT
+  logEvent(`${email},otp_sent`);
 };
 
 // ================= VERIFY OTP =================
@@ -24,22 +35,33 @@ exports.verifyOtp = async (email, otp) => {
     [email]
   );
 
-  if (result.rows.length === 0) return false;
+  if (result.rows.length === 0) {
+    logEvent(`${email},otp_failed`); // no OTP found
+    return false;
+  }
 
   const record = result.rows[0];
 
   // ❌ EXPIRED → DELETE
   if (new Date(record.expires_at) < new Date()) {
     await db.query("DELETE FROM otps WHERE email=$1", [email]);
+
+    logEvent(`${email},otp_failed_expired`);
     return false;
   }
 
   const match = await bcrypt.compare(otp, record.otp);
 
-  if (!match) return false;
+  if (!match) {
+    logEvent(`${email},otp_failed`);
+    return false;
+  }
 
   // 🔥 DELETE AFTER SUCCESS (ONE-TIME USE)
   await db.query("DELETE FROM otps WHERE email=$1", [email]);
+
+  // 🔥 LOG SUCCESS
+  logEvent(`${email},otp_success`);
 
   return true;
 };
