@@ -141,49 +141,61 @@ const otp = crypto.randomInt(100000, 999999).toString();
 
 // ================= VERIFY LOGIN OTP (NEW) =================
 router.post("/verify-login-otp", async (req, res) => {
-  const { username, otp } = req.body;
+  try {
+    const { username, otp } = req.body;
 
-  if (!username || !otp) {
-    return res.status(400).json({ message: "All fields required ❌" });
+    if (!username || !otp) {
+      return res.status(400).json({ message: "All fields required ❌" });
+    }
+
+    const valid = await verifyOtp(username, otp);
+
+    if (!valid) {
+      return res.status(400).json({ message: "Invalid OTP ❌" });
+    }
+
+    // 🔥 fetch role
+    const result = await db.query(
+      "SELECT role FROM users WHERE username=$1",
+      [username]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ message: "User not found ❌" });
+    }
+
+    const user = result.rows[0];
+
+    // 🔥 create token
+    const token = jwt.sign(
+      {
+        username: username,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    // 🍪 cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+    });
+
+    res.json({
+      message: "Login success ✅",
+      token,
+    });
+
+  } catch (err) {
+    console.error("OTP verify error:", err);
+    res.status(500).json({ message: "Server error ❌" });
   }
-
-  const valid = await verifyOtp(username, otp);
-
-  if (!valid) {
-    return res.status(400).json({ message: "Invalid OTP ❌" });
-  }
-
- // 🔥 fetch role from DB
-const result = await db.query(
-  "SELECT role FROM users WHERE username=$1",
-  [username]
-);
-
-const user = result.rows[0];
-
-// 🔥 create token with role
-const token = jwt.sign(
-  {
-    username: username,
-    role: user.role
-  },
-  process.env.JWT_SECRET,
-  { expiresIn: "1h" }
-);
-
-// 🍪 cookie (optional but good)
-res.cookie("token", token, {
-  httpOnly: true,
-  secure: true,
-  sameSite: "none",
-  path: "/",
 });
-
-// 🔥 ALSO send token in response
-res.json({
-  message: "Login success ✅",
-  token   // ✅ IMPORTANT
-});
+//
+// 🔥 CLOSE THE ROUTE HERE
 // ================= DASHBOARD =================
 router.get("/dashboard", (req, res) => {
   const token = req.cookies?.token;
