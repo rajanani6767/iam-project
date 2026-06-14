@@ -96,6 +96,10 @@ export default function AuthPage() {
     "OTP sent to email 🔐 Please check your Inbox and Spam/Junk folder."
   );
 }
+    else {
+    alert(data.message);
+  }
+};
 
   // VERIFY OTP
   const verifyLoginOtp = async () => {
