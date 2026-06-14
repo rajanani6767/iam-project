@@ -128,7 +128,7 @@ const otp = crypto.randomInt(100000, 999999).toString();
     await sendOtpEmail(username, otp);
 
     res.json({
-      message: "OTP sent to email 🔐",
+      message: "OTP sent to email 🔐 Please check your Inbox and Spam/Junk folder.",
       mfa: true,
       username,
     });
@@ -231,7 +231,7 @@ if (result.rows.length > 0) {
 
 // SAME RESPONSE ALWAYS
 res.json({
-  message: "OTP sent to your email if registered ✅"
+  message: "OTP sent to your email if registered ✅ Please check your Inbox and Spam/Junk folder."
 });
   }); 
 // ================= RESET PASSWORD =================
