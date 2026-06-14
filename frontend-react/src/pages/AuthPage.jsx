@@ -87,14 +87,15 @@ export default function AuthPage() {
 
     const data = await res.json();
 
-    if (data.mfa) {
-      setShowLoginOtp(true);
-      setTempUser(loginEmail);
-      alert("OTP sent 🔐Please check your Inbox and Spam/Junk folder.");
-    } else {
-      alert(data.message);
-    }
-  };
+   if (data.mfa) {
+  setShowLoginOtp(true);
+  setTempUser(loginEmail);
+
+  alert(
+    data.message ||
+    "OTP sent to email 🔐 Please check your Inbox and Spam/Junk folder."
+  );
+}
 
   // VERIFY OTP
   const verifyLoginOtp = async () => {
