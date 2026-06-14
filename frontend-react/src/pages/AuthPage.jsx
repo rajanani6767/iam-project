@@ -90,7 +90,7 @@ export default function AuthPage() {
     if (data.mfa) {
       setShowLoginOtp(true);
       setTempUser(loginEmail);
-      alert("OTP sent 🔐");
+      alert("OTP sent 🔐Please check your Inbox and Spam/Junk folder.");
     } else {
       alert(data.message);
     }
