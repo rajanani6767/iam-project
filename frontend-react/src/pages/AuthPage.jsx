@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import ReCAPTCHA from "react-google-recaptcha";
 
@@ -28,13 +28,30 @@ export default function AuthPage() {
   const [pwError, setPwError] = useState("");
 
   const [captcha, setCaptcha] = useState(null);
+  const captchaRef = useRef(null);
 
   // MFA
   const [showLoginOtp, setShowLoginOtp] = useState(false);
   const [loginOtp, setLoginOtp] = useState("");
   const [tempUser, setTempUser] = useState("");
 
+  // 🔥 ADDED: clear all auth form fields + captcha when switching tabs
   const navigate = useNavigate();
+
+  const handleTabChange = (t) => {
+    setTab(t);
+    setLoginEmail("");
+    setLoginPassword("");
+    setRegEmail("");
+    setRegPassword("");
+    setForgotEmail("");
+    setOtp("");
+    setNewPass("");
+    setShowLoginOtp(false);
+    setLoginOtp("");
+    setCaptcha(null);
+    if (captchaRef.current) captchaRef.current.reset();
+  };
 
   // 🔥 ONLY CHANGE: password → regPassword
   const rules = {
@@ -97,7 +114,12 @@ export default function AuthPage() {
   );
 }
     else {
-    alert(data.message);
+    alert(data.message || "Invalid username or password ❌");
+
+    // 🔥 ADDED: clear password + refresh captcha on wrong credentials
+    setLoginPassword("");
+    setCaptcha(null);
+    if (captchaRef.current) captchaRef.current.reset();
   }
 };
 
@@ -119,7 +141,8 @@ export default function AuthPage() {
 
       navigate("/dashboard");
     } else {
-      alert(data.message);
+      alert(data.message || "Invalid OTP ❌");
+      setLoginOtp(""); // 🔥 ADDED: clear OTP field on failure
     }
   };
 
@@ -203,7 +226,7 @@ export default function AuthPage() {
         {["login", "register", "forgot"].map((t) => (
           <button
             key={t}
-            onClick={() => setTab(t)}
+            onClick={() => handleTabChange(t)}
             style={{
               margin: "5px",
               padding: "8px 15px",
@@ -240,7 +263,7 @@ export default function AuthPage() {
             />
 
             <div style={{ margin: "15px 0" }}>
-              <ReCAPTCHA sitekey={SITE_KEY} onChange={setCaptcha} />
+              <ReCAPTCHA ref={captchaRef} sitekey={SITE_KEY} onChange={setCaptcha} />
             </div>
 
             {!showLoginOtp && (
