@@ -13,6 +13,9 @@ export default function AuthPage() {
 
   // 🔥 ADDED STATES (DO NOT REMOVE ABOVE)
   const [loginEmail, setLoginEmail] = useState("");
+  const [showLoginPw, setShowLoginPw] = useState(false);
+  const [showRegPw, setShowRegPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
   const [loginPassword, setLoginPassword] = useState("");
 
   const [regEmail, setRegEmail] = useState("");
@@ -49,6 +52,9 @@ export default function AuthPage() {
     setNewPass("");
     setShowLoginOtp(false);
     setLoginOtp("");
+    setShowLoginPw(false);
+    setShowRegPw(false);
+    setShowNewPw(false);
     setCaptcha(null);
     if (captchaRef.current) captchaRef.current.reset();
   };
@@ -266,13 +272,22 @@ export default function AuthPage() {
               onChange={(e) => setLoginEmail(e.target.value)}
             />
 
-            <input
-              style={inputStyle}
-              type="password"
-              placeholder="Password"
-              value={loginPassword}
-              onChange={(e) => setLoginPassword(e.target.value)}
-            />
+            {/* 🔥 ADDED: eye toggle login password */}
+            <div style={{ position: "relative", width: "100%" }}>
+              <input
+                style={{ ...inputStyle, paddingRight: "40px" }}
+                type={showLoginPw ? "text" : "password"}
+                placeholder="Password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+              />
+              <span
+                onClick={() => setShowLoginPw(!showLoginPw)}
+                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", fontSize: "18px", userSelect: "none" }}
+              >
+                {showLoginPw ? "🙈" : "👁️"}
+              </span>
+            </div>
 
             <div style={{ margin: "15px 0" }}>
               <ReCAPTCHA ref={captchaRef} sitekey={SITE_KEY} onChange={setCaptcha} />
@@ -310,13 +325,22 @@ export default function AuthPage() {
               onChange={(e) => setRegEmail(e.target.value)}
             />
 
-            <input
-              style={inputStyle}
-              type="password"
-              placeholder="Password"
-              value={regPassword}
-              onChange={(e) => setRegPassword(e.target.value)}
-            />
+            {/* 🔥 ADDED: eye toggle register password */}
+            <div style={{ position: "relative", width: "100%" }}>
+              <input
+                style={{ ...inputStyle, paddingRight: "40px" }}
+                type={showRegPw ? "text" : "password"}
+                placeholder="Password"
+                value={regPassword}
+                onChange={(e) => setRegPassword(e.target.value)}
+              />
+              <span
+                onClick={() => setShowRegPw(!showRegPw)}
+                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", fontSize: "18px", userSelect: "none" }}
+              >
+                {showRegPw ? "🙈" : "👁️"}
+              </span>
+            </div>
 
             {/* PASSWORD RULE BOX */}
             <div style={{ textAlign: "left", fontSize: "13px" }}>
@@ -370,13 +394,22 @@ export default function AuthPage() {
               onChange={(e) => setOtp(e.target.value)}
             />
 
-            <input
-              style={inputStyle}
-              type="password"
-              placeholder="New Password"
-              value={newPass}
-              onChange={(e) => setNewPass(e.target.value)}
-            />
+            {/* 🔥 ADDED: eye toggle new password */}
+            <div style={{ position: "relative", width: "100%" }}>
+              <input
+                style={{ ...inputStyle, paddingRight: "40px" }}
+                type={showNewPw ? "text" : "password"}
+                placeholder="New Password"
+                value={newPass}
+                onChange={(e) => setNewPass(e.target.value)}
+              />
+              <span
+                onClick={() => setShowNewPw(!showNewPw)}
+                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", fontSize: "18px", userSelect: "none" }}
+              >
+                {showNewPw ? "🙈" : "👁️"}
+              </span>
+            </div>
 
             {/* 🔥 ADDED: same strength indicators as register tab */}
             {newPass.length > 0 && (
