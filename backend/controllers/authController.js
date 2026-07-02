@@ -51,30 +51,22 @@ exports.register = async (req, res) => {
 
 // ================= LOGIN =================
 exports.login = async (req, res) => {
+  console.log("➡️ BODY:", req.body);
+
   const user = req.body.username || req.body.email;
 
   try {
     const { accessToken, refreshToken } =
       await service.loginUser(user, req.body.password);
 
+    console.log("✅ LOGIN SUCCESS:", user);
+
     await logEvent(user, "login_success");
-
-    res.cookie("token", accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none"
-    });
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none"
-    });
 
     res.json({ message: "Login Success ✅" });
 
   } catch (err) {
-    console.log("❌ LOGIN FAILED HIT");
+    console.log("❌ LOGIN FAILED:", user, err.message);
 
     await logEvent(user || "unknown_user", "login_failed");
 

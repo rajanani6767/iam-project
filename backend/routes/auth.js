@@ -242,6 +242,14 @@ router.post("/reset-password", async (req, res) => {
     return res.status(400).json({ message: "All fields required ❌" });
   }
 
+  // 🔥 ADDED: same strength rules as register — backend enforced
+  const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&]).{8,}$/.test(newPassword);
+  if (!strongPassword) {
+    return res.status(400).json({
+      message: "Password must be 8+ characters with uppercase, lowercase and special character (@$!%*?&) ❌"
+    });
+  }
+
   const valid = await verifyOtp(username, otp);
 
   if (!valid) {
