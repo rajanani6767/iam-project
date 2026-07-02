@@ -61,6 +61,14 @@ export default function AuthPage() {
     special: /[@$!%*?&]/.test(regPassword),
   };
 
+  // 🔥 ADDED: same rules for forgot password new password field
+  const newPassRules = {
+    length: newPass.length >= 8,
+    lower: /[a-z]/.test(newPass),
+    upper: /[A-Z]/.test(newPass),
+    special: /[@$!%*?&]/.test(newPass),
+  };
+
   const inputStyle = {
     width: "90%",
     padding: "10px",
@@ -178,6 +186,10 @@ export default function AuthPage() {
 
   // RESET PASSWORD
   const resetPassword = async () => {
+    // 🔥 ADDED: validate new password strength before submitting
+    if (!newPassRules.length || !newPassRules.lower || !newPassRules.upper || !newPassRules.special) {
+      return alert("Password not strong enough ❌ Must be 8+ chars with uppercase, lowercase and special character.");
+    }
     const res = await fetch(`${BASE_URL}/auth/reset-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -360,12 +372,30 @@ export default function AuthPage() {
 
             <input
               style={inputStyle}
+              type="password"
               placeholder="New Password"
               value={newPass}
               onChange={(e) => setNewPass(e.target.value)}
             />
 
-            <button style={btnStyle} onClick={resetPassword}>
+            {/* 🔥 ADDED: same strength indicators as register tab */}
+            {newPass.length > 0 && (
+              <div style={{ fontSize: "12px", marginBottom: "8px" }}>
+                <p style={{ color: newPassRules.length ? "lime" : "red" }}>✅ Min 8 characters</p>
+                <p style={{ color: newPassRules.lower ? "lime" : "red" }}>✅ Lowercase letter</p>
+                <p style={{ color: newPassRules.upper ? "lime" : "red" }}>✅ Uppercase letter</p>
+                <p style={{ color: newPassRules.special ? "lime" : "red" }}>✅ Special character (@$!%*?&)</p>
+              </div>
+            )}
+
+            <button
+              style={{
+                ...btnStyle,
+                opacity: (!newPassRules.length || !newPassRules.lower || !newPassRules.upper || !newPassRules.special) ? 0.5 : 1,
+                cursor: (!newPassRules.length || !newPassRules.lower || !newPassRules.upper || !newPassRules.special) ? "not-allowed" : "pointer",
+              }}
+              onClick={resetPassword}
+            >
               Reset Password
             </button>
           </>
