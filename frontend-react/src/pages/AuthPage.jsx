@@ -174,11 +174,13 @@ export default function AuthPage() {
     });
 
     const data = await res.json();
-    alert(data.message || data.errors?.[0]?.msg);
 
-    // 🔥 ADDED: on success, go to login tab and clear fields
+    // 🔥 FIXED: switch tab first, then alert — so after OK it's already on login tab, fields cleared
     if (res.ok) {
       handleTabChange("login");
+      alert("Registered successfully ✅ Please login.");
+    } else {
+      alert(data.message || data.errors?.[0]?.msg);
     }
   };
 
@@ -213,11 +215,16 @@ export default function AuthPage() {
     });
 
     const data = await res.json();
-    alert(data.message);
 
-    // 🔥 ADDED: on success, go to login tab and clear fields
+    // 🔥 FIXED: switch tab first, then alert — so after OK it's already on login tab, fields cleared
     if (res.ok) {
       handleTabChange("login");
+      alert("Password reset successful ✅ Please login with your new password.");
+    } else {
+      // 🔥 ADDED: clear OTP + newPass on wrong OTP so user starts fresh
+      setOtp("");
+      setNewPass("");
+      alert(data.message);
     }
   };
   const generatePassword = async () => {
