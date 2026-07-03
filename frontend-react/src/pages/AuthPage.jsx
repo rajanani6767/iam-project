@@ -175,6 +175,11 @@ export default function AuthPage() {
 
     const data = await res.json();
     alert(data.message || data.errors?.[0]?.msg);
+
+    // 🔥 ADDED: on success, go to login tab and clear fields
+    if (res.ok) {
+      handleTabChange("login");
+    }
   };
 
   // SEND OTP
@@ -209,9 +214,12 @@ export default function AuthPage() {
 
     const data = await res.json();
     alert(data.message);
-  };
 
-  // PASSWORD GENERATOR (UNCHANGED)
+    // 🔥 ADDED: on success, go to login tab and clear fields
+    if (res.ok) {
+      handleTabChange("login");
+    }
+  };
   const generatePassword = async () => {
     if (pwLength < 8 || pwLength > 32) {
       return setPwError("8-32 only ❌");
