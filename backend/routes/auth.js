@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
 const axios = require("axios");
 const rateLimit = require("express-rate-limit");
+const authMiddleware = require("../middleware/authMiddleware");
 
 const { saveOtp, verifyOtp } = require("../services/otpService");
 const { sendOtpEmail } = require("../services/emailService");
@@ -197,21 +198,9 @@ router.post("/verify-login-otp", async (req, res) => {
 //
 // 🔥 CLOSE THE ROUTE HERE
 // ================= DASHBOARD =================
-router.get("/dashboard", (req, res) => {
-  const token = req.cookies?.token;
-
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized ❌" });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    res.json({ message: `Welcome ${decoded.username} 🔐` });
-  } catch {
-    res.status(403).json({ message: "Invalid token ❌" });
-  }
+router.get("/dashboard", authMiddleware, (req, res) => {
+  res.json({ message: `Welcome ${req.user.username} 🔐` });
 });
-
 // ================= SEND OTP (RESET PASSWORD) =================
 router.post("/send-otp", otpLimiter, async (req, res) => {
   const { username } = req.body;
@@ -270,6 +259,7 @@ router.post("/reset-password", async (req, res) => {
 
 // ================= PASSWORD GENERATOR =================
 router.get("/generate-password", (req, res) => {
+  const crypto = require("crypto");
   let length = parseInt(req.query.length) || 12;
 
   if (length < 8) length = 8;
@@ -281,7 +271,7 @@ router.get("/generate-password", (req, res) => {
   let password = "";
 
   for (let i = 0; i < length; i++) {
-    password += chars[Math.floor(Math.random() * chars.length)];
+    password += chars[crypto.randomInt(0, chars.length)];
   }
 
   res.json({ password });
